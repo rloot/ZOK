@@ -6,12 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build":"tsc -p .", 
-    "start": "npm run build -- -w"
+    "start": "npm run build && node src/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ts-creator": "^1.2.5",
     "typescript": "^5.0.4",
     "zod-to-json-schema": "^3.20.4"
   }
