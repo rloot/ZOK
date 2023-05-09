@@ -5,13 +5,19 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build":"tsc -p .", 
-    "start": "npm run build && node src/index.js"
+    "build": "tsc -p .",
+    "start": "rm -rf src/structs.ts && npm run build &&  node dist/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "typescript": "^5.0.4",
+    "zod": "^3.21.4",
+    "snarkyjs": "^0.10.1",
     "zod-to-json-schema": "^3.20.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.1.1",
+    "ts-creator": "^1.2.5"
   }
 }
