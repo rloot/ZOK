@@ -5,15 +5,6 @@ import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
-// const schema = z
-//   .object({
-//     // issuer id number
-//     issuer: z.number().positive(),
-//     // timestamp of expiration
-//     expiration: z.number().positive(),
-//   })
-//   .describe("Vaccine schema");
-
 import { Vaccine, Benchmark } from "./cases"
 
 const vaccineJson = zodToJsonSchema(Vaccine, "vaccine");
@@ -21,7 +12,6 @@ const benchmarkJson = zodToJsonSchema(Benchmark, "Benchmark");
 
 // console.log(jsonSchema.definitions);
 const { definitions } = benchmarkJson
-// const { definitions } = jsonSchema;
 
 if (definitions === undefined) {
 
@@ -212,7 +202,6 @@ function createCheckFunction(entity: any) {
       }
       if (property.multipleOf !== undefined) {
       }
-
       return statements;
     }
 
