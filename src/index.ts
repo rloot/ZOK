@@ -1,26 +1,11 @@
-import { z } from "zod";
 import * as fs from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
-import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
 import { Vaccine, Benchmark } from "./cases"
+import { ZodObject } from "zod";
+import { _getBooleanAsserts, _getNumberAsserts, _getStringAsserts } from "./codegen";
 
-const vaccineJson = zodToJsonSchema(Vaccine, "vaccine");
-const benchmarkJson = zodToJsonSchema(Benchmark, "Benchmark");
-
-// console.log(jsonSchema.definitions);
-const { definitions } = benchmarkJson
-
-if (definitions === undefined) {
-
-} else {
-  for (const entity of Object.keys(definitions)) {
-    console.log('create entity', entity)
-    createEntity(entity, definitions);
-  }
-}
 
 function createThrow() {
   return ts.factory.createThrowStatement(
@@ -78,7 +63,6 @@ function createAssertFunction() {
       true
     )
   );
-  // ts.factory.createExpressionStatement(ts.factory.createIdentifier('expr')),
 }
 
 function createCheckFunction(entity: any) {
@@ -98,128 +82,14 @@ function createCheckFunction(entity: any) {
     const { type } = property;
     console.log(type)
 
-    function _getAssertCallStatement(expr: ts.Expression, message: ts.Expression): ts.Statement {
-      return ts.factory.createCallExpression(
-        ts.factory.createIdentifier(`this._assert`),
-        undefined,
-        [expr, message]
-      ) as unknown as ts.Statement
-    }
-
-    function _getMinimumValueAssert(min: number): ts.Statement {
-      const binaryExpr = ts.factory.createBinaryExpression(
-        ts.factory.createIdentifier(`this.${key}`),
-        ts.factory.createToken(ts.SyntaxKind.GreaterThanToken),
-        ts.factory.createNumericLiteral(min.toString())
-      );
-      const call = ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier(`this.${key}`),
-          ts.factory.createIdentifier('greaterThan')
-        ),
-        undefined,
-        [ts.factory.createNumericLiteral(min)]
-      )
-      const message = ts.factory.createStringLiteral(
-        `${key} must be greater than ${min}`
-      );
-      return _getAssertCallStatement(call, message)
-    }
-    
-    function _getExclusiveMinimumValueAssert(min: number): ts.Statement {
-      const callExpr = ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier(`this.${key}`),
-          ts.factory.createIdentifier('greaterThanOrEqual')
-        ),
-        undefined,
-        [ts.factory.createNumericLiteral(min)]
-      )
-      const message = ts.factory.createStringLiteral(
-        `${key} must be greater or equal than ${min}`
-      );
-      return _getAssertCallStatement(callExpr, message)
-    }
-
-    function _getMaximumValueAssert(max: number): ts.Statement {
-      const callExpr = ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier(`this.${key}`),
-          ts.factory.createIdentifier('greaterThanOrEqual')
-        ),
-        undefined,
-        [ts.factory.createNumericLiteral(max)]
-      )
-      const message = ts.factory.createStringLiteral(
-        `${key} must be less than ${max}`
-        );
-      return _getAssertCallStatement(callExpr, message)
-    }
-
-    function _getExclusiveMaximumValueAssert(max: number): ts.Statement {
-      const callExpr = ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier(`this.${key}`),
-          ts.factory.createIdentifier('lessThanOrEqual')
-        ),
-        undefined,
-        [ts.factory.createNumericLiteral(max)]
-      )
-      const message = ts.factory.createStringLiteral(
-        `${key} must be less or equal than ${max}`
-        );
-      return _getAssertCallStatement(callExpr, message)
-    }
-
-    function _getBooleanAsserts(property: any): ts.Statement[] {
-      const statements: ts.Statement[] = [];
-
-      return statements;
-    }
-
-    function createSingleLineComment(text: string) {
-      return ts.factory.createIdentifier(
-        '// '.concat(text)
-      ) as unknown as ts.Statement
-    }
-
-    function _getNumberAsserts(property: JsonSchema7NumberType): ts.Statement[] {
-      const statements: ts.Statement[] = [];
-
-      if (property.minimum !== undefined) {
-
-        statements.push(_getMinimumValueAssert(property.minimum));
-      }
-      if (property.exclusiveMinimum !== undefined) {
-        statements.push(createSingleLineComment('exclusive minimum'))
-        statements.push(_getExclusiveMinimumValueAssert(property.exclusiveMinimum));
-      }
-      if (property.maximum !== undefined) {
-        statements.push(_getMaximumValueAssert(property.maximum));
-      }
-      if (property.exclusiveMaximum !== undefined) {
-        statements.push(_getExclusiveMaximumValueAssert(property.exclusiveMaximum));
-      }
-      if (property.multipleOf !== undefined) {
-      }
-      return statements;
-    }
-
-    function _getStringAsserts(
-      property: JsonSchema7StringType
-    ): ts.Statement[] {
-      const statements: ts.Statement[] = [];
-      return statements;
-    }
-
     console.log(property)
     switch (type) {
       case "string":
-        statements.push(..._getStringAsserts(property));
+        statements.push(..._getStringAsserts(key, property));
       case "number":
-        statements.push(..._getNumberAsserts(property));
+        statements.push(..._getNumberAsserts(key, property));
       case "boolean":
-        statements.push(..._getBooleanAsserts(property));
+        statements.push(..._getBooleanAsserts(key, property));
     }
   }
 
@@ -267,7 +137,7 @@ function getProperties(properties: any[]) {
 
 function createClass(entity: any) {
   const { properties } = entity;
-  console.log(entity)
+  // console.log(entity)
   const props = getProperties(properties)
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
@@ -309,17 +179,18 @@ function createEntity(name: string, definitions: any) {
   
   const entity = definitions[name];
   const { properties } = entity;
-  
-  // const parameters: ts.ParameterDeclaration[] = [];
-   
+     
+  // single line import statement
   const imports: ts.ImportDeclaration[] = [createImportStaments()];
 
+  // create class definitoin
   const clazz = createClass(entity)
 
   const printer = ts.createPrinter({
     newLine: ts.NewLineKind.LineFeed,
   });
 
+  // create source file including imports and class definition
   const sf = ts.factory.createSourceFile(
     [...imports, clazz],
     ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
@@ -327,5 +198,26 @@ function createEntity(name: string, definitions: any) {
   )
   const source = printer.printFile(sf)
 
-  fs.writeFileSync('./src/structs.ts', source)
+  // if generated dir does not exist, create it
+  if (!fs.existsSync('./src/generated')) fs.mkdirSync('./src/generated')
+  // write created struct to file
+  fs.writeFileSync(`./src/generated/${name}.ts`, source)
 }
+
+
+export function generate(filename: string, schema: ZodObject<any>) {
+  // use the right name
+  const json = zodToJsonSchema(schema, "Benchmark")
+  const { definitions } = json
+  if (definitions === undefined) {
+    throw Error('undefined definitions')
+  } else {
+    for (const entity of Object.keys(definitions)) {
+      // console.log('create entity', entity)
+      createEntity(entity, definitions);
+    }
+  }  
+}
+// const vaccineJson = zodToJsonSchema(Vaccine, "vaccine");
+const benchmarkJson = zodToJsonSchema(Benchmark, "Benchmark");
+generate('benchmark', Benchmark)
