@@ -5,22 +5,17 @@ import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
-const schema = z
-  .object({
-    // issuer id number
-    issuer: z.number().positive(),
-    // timestamp of expiration
-    expiration: z.number().positive(),
-  })
-  .describe("Vaccine schema");
+import { Vaccine, Benchmark, Square } from "./cases"
 
-const jsonSchema = zodToJsonSchema(schema, "vaccine");
+const vaccineJson = zodToJsonSchema(Vaccine, "vaccine");
+const benchmarkJson = zodToJsonSchema(Benchmark, "Benchmark");
+const square = zodToJsonSchema(Benchmark, "Square");
 
-console.log(jsonSchema.definitions);
-
-const { definitions } = jsonSchema;
+// console.log(jsonSchema.definitions);
+const { definitions } = square
 
 if (definitions === undefined) {
+
 } else {
   for (const entity of Object.keys(definitions)) {
     console.log('create entity', entity)
@@ -96,12 +91,13 @@ function createCheckFunction(entity: any) {
   // console.log('properties', properties)
   for (const key of Object.keys(properties)) {
 
-    // console.log('property name', key)
+    console.log('property name', key)
     const property = properties[key];
-
+    
     if (property === undefined) continue;
-
+    
     const { type } = property;
+    console.log(type)
 
     function _getAssertCallStatement(expr: ts.Expression, message: ts.Expression): ts.Statement {
       return ts.factory.createCallExpression(
@@ -160,7 +156,6 @@ function createCheckFunction(entity: any) {
         );
       return _getAssertCallStatement(callExpr, message)
     }
-    
     function _getExclusiveMaximumValueAssert(max: number): ts.Statement {
       const callExpr = ts.factory.createCallExpression(
         ts.factory.createPropertyAccessExpression(
@@ -182,13 +177,21 @@ function createCheckFunction(entity: any) {
       return statements;
     }
 
+    function createSingleLineComment(text: string) {
+      return ts.factory.createIdentifier(
+        '// '.concat(text)
+      ) as unknown as ts.Statement
+    }
+
     function _getNumberAsserts(property: JsonSchema7NumberType): ts.Statement[] {
       const statements: ts.Statement[] = [];
 
       if (property.minimum !== undefined) {
+
         statements.push(_getMinimumValueAssert(property.minimum));
       }
       if (property.exclusiveMinimum !== undefined) {
+        statements.push(createSingleLineComment('exclusive minimum'))
         statements.push(_getExclusiveMinimumValueAssert(property.exclusiveMinimum));
       }
       if (property.maximum !== undefined) {
@@ -199,7 +202,6 @@ function createCheckFunction(entity: any) {
       }
       if (property.multipleOf !== undefined) {
       }
-
       return statements;
     }
 
@@ -210,6 +212,7 @@ function createCheckFunction(entity: any) {
       return statements;
     }
 
+    console.log(property)
     switch (type) {
       case "string":
         statements.push(..._getStringAsserts(property));
@@ -264,7 +267,7 @@ function getProperties(properties: any[]) {
 
 function createClass(entity: any) {
   const { properties } = entity;
-
+  console.log(entity)
   const props = getProperties(properties)
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
@@ -278,7 +281,7 @@ function createClass(entity: any) {
     [
       ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
     ],
-    "Vaccine",
+    "Square",
     undefined,
     [
       ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
@@ -311,7 +314,7 @@ function createEntity(name: string, definitions: any) {
    
   const imports: ts.ImportDeclaration[] = [createImportStaments()];
 
-  const clazz = createClass(properties)
+  const clazz = createClass(entity)
 
   const printer = ts.createPrinter({
     newLine: ts.NewLineKind.LineFeed,
