@@ -9,7 +9,7 @@ import { Vaccine, Benchmark, Square } from "./cases"
 
 const vaccineJson = zodToJsonSchema(Vaccine, "vaccine");
 const benchmarkJson = zodToJsonSchema(Benchmark, "Benchmark");
-const square = zodToJsonSchema(Benchmark, "Square");
+const square = zodToJsonSchema(Square, "Square");
 
 // console.log(jsonSchema.definitions);
 const { definitions } = square

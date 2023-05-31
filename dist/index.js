@@ -32,7 +32,7 @@ const typescript_1 = __importDefault(require("typescript"));
 const cases_1 = require("./cases");
 const vaccineJson = (0, zod_to_json_schema_1.zodToJsonSchema)(cases_1.Vaccine, "vaccine");
 const benchmarkJson = (0, zod_to_json_schema_1.zodToJsonSchema)(cases_1.Benchmark, "Benchmark");
-const square = (0, zod_to_json_schema_1.zodToJsonSchema)(cases_1.Benchmark, "Square");
+const square = (0, zod_to_json_schema_1.zodToJsonSchema)(cases_1.Square, "Square");
 // console.log(jsonSchema.definitions);
 const { definitions } = square;
 if (definitions === undefined) {
