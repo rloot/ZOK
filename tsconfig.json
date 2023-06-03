@@ -16,7 +16,8 @@
     // "strictBindCallApply": true,                      /* Check that the arguments for 'bind', 'call', and 'apply' methods match the original function. */
     // "strictPropertyInitialization": true,             /* Check for class properties that are declared but not set in the constructor. */
     // "alwaysStrict": true,                             /* Ensure 'use strict' is always emitted. */
-    "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+    "skipLibCheck": true,                                 /* Skip type checking all .d.ts files. */
+    "experimentalDecorators": true,
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]

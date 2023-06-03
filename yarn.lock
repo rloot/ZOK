@@ -84,6 +84,16 @@ end-of-stream@^1.1.0:
   dependencies:
     once "^1.4.0"
 
+env@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/env/-/env-0.0.2.tgz#50c19f307b129a45845b6b686df5b39dd40d1cf0"
+  integrity sha512-yP8LfjO4ughSHD/3HgLPinWzexmaOGvRfs2TFx0SZhOm7j1xPi9evjuGcLiNVHIGLmcsgMak4eDbBzlYqGIVxw==
+
+eslint-plugin-snarkyjs@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-snarkyjs/-/eslint-plugin-snarkyjs-0.3.0.tgz#4bb64b0839593de28a8e8fb09403fc69777547db"
+  integrity sha512-ncREhfSXrd+F2yp2e5en/WOYBHBGHNJY65JSYqi6Hc/UVyqkAS8tHnZ4tiPRb2cotewFfLhguLftkmYzUhpoEw==
+
 esprima@~4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/esprima/-/esprima-4.0.1.tgz#13b04cdb3e6c5d19df91ab6987a8695619b0aa71"
@@ -348,13 +358,14 @@ signal-exit@^3.0.0:
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.7.tgz#a9a1767f8af84155114eaabd73f99273c8f59ad9"
   integrity sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==
 
-snarkyjs@^0.10.1:
-  version "0.10.1"
-  resolved "https://registry.yarnpkg.com/snarkyjs/-/snarkyjs-0.10.1.tgz#5663bf107965717da47cb40310b4d2600686644a"
-  integrity sha512-gRrnF7AVYwV9ZhOpMtzk4JRAeN1111zB07fOINTC0obYL83IrMdOwiSMOKpfckocnNYFJnWC5k4T4P+3ll5Y9w==
+snarkyjs@0.9.8:
+  version "0.9.8"
+  resolved "https://registry.yarnpkg.com/snarkyjs/-/snarkyjs-0.9.8.tgz#1aa0052f322679f1b53c5ea0ac9ae2e0c799d3a3"
+  integrity sha512-wGimYTdYPN1yqvUurFul6W9oq1uOUWUjg2bQSEnY5AAp5S2WcuVtpnfYdGwCUpdrTJZHnz1pkyJSOFWbn+JNqA==
   dependencies:
     blakejs "1.2.1"
     detect-gpu "^5.0.5"
+    env "^0.0.2"
     isomorphic-fetch "^3.0.0"
     js-sha256 "^0.9.0"
     reflect-metadata "^0.1.13"
