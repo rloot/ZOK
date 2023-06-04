@@ -4,7 +4,7 @@ import ts, { ObjectLiteralElementLike } from "typescript";
 
 import { Vaccine, Benchmark } from "./cases"
 import { ZodObject } from "zod";
-import { _getBooleanAsserts, _getNumberAsserts, _getStringAsserts } from "./codegen";
+import { _getBooleanAsserts, _getDateAsserts, _getNumberAsserts, _getStringAsserts } from "./codegen";
 
 
 function createThrow() {
@@ -72,24 +72,31 @@ function createCheckFunction(entity: any) {
   const statements: ts.Statement[] = [];
 
   // console.log('properties', properties)
+  console.log(entity)
   for (const key of Object.keys(properties)) {
+
 
     console.log('property name', key)
     const property = properties[key];
     
     if (property === undefined) continue;
     
-    const { type } = property;
+    const { type, format } = property;
     console.log(type)
 
     console.log(property)
     switch (type) {
       case "string":
-        statements.push(..._getStringAsserts(key, property));
+        if (format === 'date-time') {
+          statements.push(..._getDateAsserts(key, property));
+        } else {
+          statements.push(..._getStringAsserts(key, property));
+        }
       case "number":
         statements.push(..._getNumberAsserts(key, property));
       case "boolean":
         statements.push(..._getBooleanAsserts(key, property));
+      
     }
   }
 

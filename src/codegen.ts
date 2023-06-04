@@ -18,6 +18,7 @@ export function _getMinimumValueAssert(
   propertyName: string,
   min: number
 ): ts.Statement {
+
   const binaryExpr = ts.factory.createBinaryExpression(
     ts.factory.createIdentifier(`this.${propertyName}`),
     ts.factory.createToken(ts.SyntaxKind.GreaterThanToken),
@@ -59,6 +60,11 @@ export function _getMaximumValueAssert(
   propertyName: string,
   max: number
 ): ts.Statement {
+
+  // if (max < 0) {
+  //   throw new Error('numbers in MINA cannot go below zero')
+  // }
+
   const callExpr = ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
       ts.factory.createIdentifier(`this.${propertyName}`),
@@ -77,6 +83,8 @@ export function _getExclusiveMaximumValueAssert(
   propertyName: string,
   max: number
 ): ts.Statement {
+
+
   const callExpr = ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
       ts.factory.createIdentifier(`this.${propertyName}`),
@@ -139,5 +147,13 @@ export function _getStringAsserts(
   property: JsonSchema7StringType
 ): ts.Statement[] {
   const statements: ts.Statement[] = [];
+  return statements;
+}
+export function _getDateAsserts(
+  propertyName: string,
+  property: JsonSchema7StringType
+): ts.Statement[] {
+  const statements: ts.Statement[] = [];
+  console.log(propertyName, property)
   return statements;
 }
