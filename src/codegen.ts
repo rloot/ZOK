@@ -1,6 +1,7 @@
+import * as fs from "fs";
 import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
-import ts from "typescript";
+import ts, { ObjectLiteralElementLike } from "typescript";
 
 
 export function _getAssertCallStatement(
@@ -158,6 +159,17 @@ export function _getDateAsserts(
   return statements;
 }
 
+function getProperties(properties: any[]) {
+  return Object.keys(properties).map((key) => {
+    return ts.factory.createPropertyAssignment(
+      key,
+      ts.factory.createIdentifier('Field'),
+    ) as unknown as ObjectLiteralElementLike;
+  })
+}
+
+
+
 function createClass(entity: any) {
   const { properties } = entity;
   // console.log(entity)
@@ -197,6 +209,105 @@ function createClass(entity: any) {
   );
 
 }
+
+function createCheckFunction(entity: any) {
+  const { properties } = entity;
+
+  const parameters: ts.ParameterDeclaration[] = [];
+  const statements: ts.Statement[] = [];
+
+  // console.log('properties', properties)
+  console.log(entity)
+  for (const key of Object.keys(properties)) {
+
+
+    console.log('property name', key)
+    const property = properties[key];
+    
+    if (property === undefined) continue;
+    
+    const { type, format } = property;
+    console.log(type)
+
+    console.log(property)
+    switch (type) {
+      case "string":
+        if (format === 'date-time') {
+          statements.push(..._getDateAsserts(key, property));
+        } else {
+          statements.push(..._getStringAsserts(key, property));
+        }
+      case "number":
+        statements.push(..._getNumberAsserts(key, property));
+      case "boolean":
+        statements.push(..._getBooleanAsserts(key, property));
+      
+    }
+  }
+
+  const checkFn = ts.factory.createMethodDeclaration(
+    [ts.factory.createModifier(ts.SyntaxKind.PublicKeyword)],
+    undefined,
+    "check",
+    undefined,
+    undefined,
+    parameters,
+    undefined,
+    ts.factory.createBlock(statements, true)
+  );
+
+  return checkFn;
+}
+
+
+export function createAssertFunction() {
+  return ts.factory.createMethodDeclaration(
+    [
+      ts.factory.createModifier(ts.SyntaxKind.PublicKeyword),
+    ],
+    undefined,
+    "_assert",
+    undefined,
+    undefined,
+    [
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.factory.createIdentifier("expr"),
+        undefined,
+        ts.factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword)
+      ),
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.factory.createIdentifier("msg"),
+        ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+        ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword)
+      ),
+    ],
+    undefined,
+    ts.factory.createBlock(
+      [
+        ts.factory.createIfStatement(
+          ts.factory.createPrefixUnaryExpression(
+            ts.SyntaxKind.ExclamationToken,
+            ts.factory.createIdentifier("expr")
+          ),
+          ts.factory.createThrowStatement(
+            ts.factory.createNewExpression(
+              ts.factory.createIdentifier("Error"),
+              undefined,
+              [ts.factory.createIdentifier("msg")]
+            )
+          ),
+          undefined
+        ),
+      ],
+      true
+    )
+  );
+}
+
 
 export function createImportStaments() {
   const names = ts.factory.createNamedImports([
