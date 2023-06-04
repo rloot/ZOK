@@ -157,3 +157,92 @@ export function _getDateAsserts(
   console.log(propertyName, property)
   return statements;
 }
+
+function createClass(entity: any) {
+  const { properties } = entity;
+  // console.log(entity)
+  const props = getProperties(properties)
+  const assertFn = createAssertFunction();
+  const checkFn = createCheckFunction(entity);
+    
+  const members = [
+    checkFn,
+    assertFn
+  ];
+
+  return ts.factory.createClassDeclaration(
+    [
+      ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
+    ],
+    "Vaccine",
+    undefined,
+    [
+      ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        ts.factory.createExpressionWithTypeArguments(
+          ts.factory.createCallExpression(
+            ts.factory.createIdentifier('Struct'),
+            undefined,
+            [
+              ts.factory.createObjectLiteralExpression(
+                props, 
+                true
+              )
+            ]
+          ),
+          undefined
+        )
+      ])
+    ],
+    members
+  );
+
+}
+
+export function createImportStaments() {
+  const names = ts.factory.createNamedImports([
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Field')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('SmartContract')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('state')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('State')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('method')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Poseidon')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Bool')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Struct'))
+  ])
+
+  return ts.factory.createImportDeclaration(
+    undefined,
+    ts.factory.createImportClause(false, undefined, names),
+    ts.factory.createStringLiteral('snarkyjs')
+  )
+}
+
+export function createEntity(name: string, definitions: any) {
+  
+  const entity = definitions[name];
+  const { properties } = entity;
+     
+  // single line import statement
+  const imports: ts.ImportDeclaration[] = [createImportStaments()];
+
+  // create class definitoin
+  const clazz = createClass(entity)
+
+  const printer = ts.createPrinter({
+    newLine: ts.NewLineKind.LineFeed,
+  });
+
+  // create source file including imports and class definition
+  const sf = ts.factory.createSourceFile(
+    [...imports, clazz],
+    ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
+    ts.NodeFlags.None
+  )
+  const source = printer.printFile(sf)
+
+  // if generated dir does not exist, create it
+  if (!fs.existsSync('./src/generated')) fs.mkdirSync('./src/generated')
+  // write created struct to file
+  fs.writeFileSync(`./src/generated/${name}.ts`, source)
+}
+
