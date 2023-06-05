@@ -4,6 +4,12 @@ import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
 
+const NO_MODIFIERS: ts.Modifier[] = [];
+const NO_ASTERISK: ts.AsteriskToken = undefined;
+const NO_QUESTION_TOKEN = undefined
+const NO_TYPED_PARAMS = undefined
+const NO_TYPED_NODE = undefined
+
 function _getAssertCallStatement(
   expr: ts.Expression,
   message: ts.Expression
@@ -315,12 +321,12 @@ function createCheckFunction(entity: any) {
  
   const checkFn = ts.factory.createMethodDeclaration(
     [ts.factory.createModifier(ts.SyntaxKind.PublicKeyword)],
-    undefined,
+    NO_ASTERISK,
     "check",
-    undefined,
-    undefined,
+    NO_QUESTION_TOKEN,
+    NO_TYPED_PARAMS,
     parameters,
-    undefined,
+    NO_TYPED_NODE,
     ts.factory.createBlock(statements, true)
   );
 
@@ -330,13 +336,11 @@ function createCheckFunction(entity: any) {
 
 function createAssertFunction() {
   return ts.factory.createMethodDeclaration(
-    [
-      ts.factory.createModifier(ts.SyntaxKind.PublicKeyword),
-    ],
-    undefined,
+    NO_MODIFIERS,
+    NO_ASTERISK,
     "_assert",
-    undefined,
-    undefined,
+    NO_QUESTION_TOKEN,
+    NO_TYPED_PARAMS,
     [
       ts.factory.createParameterDeclaration(
         undefined,
@@ -353,14 +357,16 @@ function createAssertFunction() {
         ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword)
       ),
     ],
-    undefined,
+    NO_TYPED_NODE,
     ts.factory.createBlock(
       [
+        // if (!expr) 
         ts.factory.createIfStatement(
           ts.factory.createPrefixUnaryExpression(
             ts.SyntaxKind.ExclamationToken,
             ts.factory.createIdentifier("expr")
           ),
+          // throw new Error(msg)
           ts.factory.createThrowStatement(
             ts.factory.createNewExpression(
               ts.factory.createIdentifier("Error"),
@@ -368,10 +374,11 @@ function createAssertFunction() {
               [ts.factory.createIdentifier("msg")]
             )
           ),
+          // no else
           undefined
         ),
       ],
-      true
+      false
     )
   );
 }
