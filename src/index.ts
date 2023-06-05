@@ -4,7 +4,7 @@ import ts, { ObjectLiteralElementLike } from "typescript";
 
 import { Vaccine, Benchmark } from "./cases"
 import { ZodObject } from "zod";
-import { createEntity, _getBooleanAsserts, _getDateAsserts, _getNumberAsserts, _getStringAsserts } from "./codegen";
+import { createEntity } from "./codegen";
 
 export function generate(filename: string, schema: ZodObject<any>) {
   // use the right name
