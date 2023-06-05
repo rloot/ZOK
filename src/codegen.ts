@@ -15,6 +15,8 @@ function _getAssertCallStatement(
   ) as unknown) as ts.Statement;
 }
 
+// property asserts
+
 function _gtAssert(
   propertyName: string,
   min: number
@@ -122,12 +124,6 @@ function _getBooleanAsserts(
   return statements;
 }
 
-function createSingleLineComment(text: string) {
-  return (ts.factory.createIdentifier(
-    `// ${text}`
-  ) as unknown) as ts.Statement;
-}
-
 function _getNumberAsserts(
   propertyName: string,
   property: JsonSchema7NumberType
@@ -172,6 +168,8 @@ function _getDateAsserts(
   return statements;
 }
 
+// utils
+
 function getProperties(properties: any[]) {
   return Object.keys(properties).map((key) => {
     return ts.factory.createPropertyAssignment(
@@ -181,7 +179,13 @@ function getProperties(properties: any[]) {
   })
 }
 
+function createSingleLineComment(text: string) {
+  return (ts.factory.createIdentifier(
+    `// ${text}`
+  ) as unknown) as ts.Statement;
+}
 
+// declarations
 
 function createClass(entity: any) {
   const { properties } = entity;
@@ -189,10 +193,12 @@ function createClass(entity: any) {
   const props = getProperties(properties)
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
-    
+  const constructorFn = createConstructorFunction(entity);    
+
   const members = [
+    constructorFn,
     checkFn,
-    assertFn
+    assertFn,
   ];
 
   return ts.factory.createClassDeclaration(
@@ -221,6 +227,62 @@ function createClass(entity: any) {
     members
   );
 
+}
+
+
+
+function createConstructorFunction(entity) {
+  const { properties } = entity;
+  
+  const props = Object.keys(properties).map(name => name)
+ 
+  // constructor params
+  const parameters = props.map(p => ts.factory.createParameterDeclaration(
+    undefined,
+    undefined,
+    ts.factory.createIdentifier(p),
+    undefined,
+    ts.factory.createTypeReferenceNode(
+      // todo : this should be the correct type, for now we always return Field 
+      ts.factory.createIdentifier('Field'), undefined
+    ),
+  ))
+ 
+  const superCall = ts.factory.createExpressionStatement(
+    ts.factory.createCallExpression(
+      ts.factory.createSuper(),
+      undefined,
+      [
+      ts.factory.createObjectLiteralExpression(
+        props.map(p => ts.factory.createShorthandPropertyAssignment(
+          ts.factory.createIdentifier(p),
+          undefined // uninitalized
+        ))
+      )
+    ])
+  )
+
+  const checkCall = ts.factory.createExpressionStatement(
+      ts.factory.createCallExpression(
+        ts.factory.createPropertyAccessExpression(
+          ts.factory.createThis(),
+          ts.factory.createIdentifier('check')
+        ),
+        undefined,
+        []
+      )
+  )
+  
+  const statements = [superCall, checkCall]
+
+  const fn = ts.factory.createConstructorDeclaration(
+    undefined,
+    parameters,
+    ts.factory.createBlock(
+      statements, true
+    ),
+  )
+  return fn
 }
 
 function _getCheckStatement(propertyName: string, property: any) {
@@ -266,7 +328,7 @@ function createCheckFunction(entity: any) {
 }
 
 
-export function createAssertFunction() {
+function createAssertFunction() {
   return ts.factory.createMethodDeclaration(
     [
       ts.factory.createModifier(ts.SyntaxKind.PublicKeyword),
@@ -314,7 +376,7 @@ export function createAssertFunction() {
   );
 }
 
-export function createImportStaments() {
+function createImportStaments() {
   const names = ts.factory.createNamedImports([
     ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Field')),
     ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('SmartContract')),
