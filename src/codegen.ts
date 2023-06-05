@@ -245,24 +245,12 @@ function createCheckFunction(entity: any) {
   const { properties } = entity;
 
   const parameters: ts.ParameterDeclaration[] = [];
-  //  = [];
-
-  // console.log('properties', properties)
   console.log(entity)
 
   const statements: ts.Statement[] = Object.entries(properties).map(
     ([name, property]) => _getCheckStatement(name, property)
   ).flat();
  
-  for (const key of Object.keys(properties)) {
-    console.log('property name', key)
-    const property = properties[key];
-    
-    if (property === undefined) continue;
-    
-
-  }
-
   const checkFn = ts.factory.createMethodDeclaration(
     [ts.factory.createModifier(ts.SyntaxKind.PublicKeyword)],
     undefined,
