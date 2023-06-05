@@ -7,6 +7,10 @@ export const Vaccine = z.object({
     expiration: z.number().positive(),
 }).describe("Vaccine schema");
 
+export const Square = z.object({
+  num: z.number().gte(0)
+});
+
 export const Benchmark = z.object({
     a: z.number().positive(),
     b: z.boolean(),

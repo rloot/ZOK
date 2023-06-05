@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
-import { Vaccine, Benchmark } from "./cases"
+import { Vaccine, Benchmark, Square } from "./cases"
 import { ZodObject } from "zod";
 import { createEntity } from "./codegen";
 
@@ -21,4 +21,4 @@ export function generate(filename: string, schema: ZodObject<any>) {
 }
 // const vaccineJson = zodToJsonSchema(Vaccine, "vaccine");
 const benchmarkJson = zodToJsonSchema(Benchmark, "Benchmark");
-generate('benchmark', Benchmark)
+generate('Vaccine', Vaccine)
