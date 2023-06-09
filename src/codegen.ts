@@ -1,9 +1,16 @@
+import * as fs from "fs";
 import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
-import ts from "typescript";
+import ts, { ObjectLiteralElementLike } from "typescript";
 
 
-export function _getAssertCallStatement(
+const NO_MODIFIERS: ts.Modifier[] = [];
+const NO_ASTERISK: ts.AsteriskToken = undefined;
+const NO_QUESTION_TOKEN = undefined
+const NO_TYPED_PARAMS = undefined
+const NO_TYPED_NODE = undefined
+
+function _getAssertCallStatement(
   expr: ts.Expression,
   message: ts.Expression
 ): ts.Statement {
@@ -14,7 +21,9 @@ export function _getAssertCallStatement(
   ) as unknown) as ts.Statement;
 }
 
-export function _getMinimumValueAssert(
+// property asserts
+
+function _gtAssert(
   propertyName: string,
   min: number
 ): ts.Statement {
@@ -24,39 +33,46 @@ export function _getMinimumValueAssert(
     ts.factory.createToken(ts.SyntaxKind.GreaterThanToken),
     ts.factory.createNumericLiteral(min.toString())
   );
-  const call = ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier(`this.${propertyName}`),
-      ts.factory.createIdentifier("greaterThan")
-    ),
-    undefined,
-    [ts.factory.createNumericLiteral(min)]
-  );
   const message = ts.factory.createStringLiteral(
     `${propertyName} must be greater than ${min}`
   );
-  return _getAssertCallStatement(call, message);
-}
-
-export function _getExclusiveMinimumValueAssert(
-  propertyName: string,
-  min: number
-): ts.Statement {
   const callExpr = ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
       ts.factory.createIdentifier(`this.${propertyName}`),
-      ts.factory.createIdentifier("greaterThanOrEqual")
+      ts.factory.createIdentifier("assertGreaterThan")
     ),
     undefined,
-    [ts.factory.createNumericLiteral(min)]
+    [
+      ts.factory.createNumericLiteral(min),
+      message
+    ]
   );
+  return (callExpr as unknown) as ts.Statement;
+}
+
+function _gteAssert(
+  propertyName: string,
+  min: number
+): ts.Statement {
   const message = ts.factory.createStringLiteral(
     `${propertyName} must be greater or equal than ${min}`
   );
-  return _getAssertCallStatement(callExpr, message);
+
+  const callExpr = ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier(`this.${propertyName}`),
+      ts.factory.createIdentifier("assertGreaterThanOrEqual")
+    ),
+    undefined,
+    [
+      ts.factory.createNumericLiteral(min),
+      message
+    ]
+  );
+  return (callExpr as unknown) as ts.Statement;
 }
 
-export function _getMaximumValueAssert(
+function _ltAssert(
   propertyName: string,
   max: number
 ): ts.Statement {
@@ -65,41 +81,47 @@ export function _getMaximumValueAssert(
   //   throw new Error('numbers in MINA cannot go below zero')
   // }
 
-  const callExpr = ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier(`this.${propertyName}`),
-      ts.factory.createIdentifier("greaterThanOrEqual")
-    ),
-    undefined,
-    [ts.factory.createNumericLiteral(max)]
-  );
   const message = ts.factory.createStringLiteral(
     `${propertyName} must be less than ${max}`
   );
-  return _getAssertCallStatement(callExpr, message);
+  const callExpr = ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier(`this.${propertyName}`),
+      ts.factory.createIdentifier("assertLessThan")
+    ),
+    undefined,
+    [
+      ts.factory.createNumericLiteral(max),
+      message    
+    ]
+  );
+  return (callExpr as unknown) as ts.Statement;
 }
 
-export function _getExclusiveMaximumValueAssert(
+function _lteAssert(
   propertyName: string,
   max: number
 ): ts.Statement {
 
-
-  const callExpr = ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier(`this.${propertyName}`),
-      ts.factory.createIdentifier("lessThanOrEqual")
-    ),
-    undefined,
-    [ts.factory.createNumericLiteral(max)]
-  );
   const message = ts.factory.createStringLiteral(
     `${propertyName} must be less or equal than ${max}`
   );
-  return _getAssertCallStatement(callExpr, message);
+  
+  const callExpr = ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier(`this.${propertyName}`),
+      ts.factory.createIdentifier("assertLessThanOrEqual")
+    ),
+    undefined,
+    [
+      ts.factory.createNumericLiteral(max),
+      message
+    ]
+  );
+  return (callExpr as unknown) as ts.Statement;
 }
 
-export function _getBooleanAsserts(
+function _getBooleanAsserts(
   propertyName: string,
   property: any
 ): ts.Statement[] {
@@ -108,33 +130,27 @@ export function _getBooleanAsserts(
   return statements;
 }
 
-export function createSingleLineComment(text: string) {
-  return (ts.factory.createIdentifier(
-    `// ${text}`
-  ) as unknown) as ts.Statement;
-}
-
-export function _getNumberAsserts(
+function _getNumberAsserts(
   propertyName: string,
   property: JsonSchema7NumberType
 ): ts.Statement[] {
   const statements: ts.Statement[] = [];
 
   if (property.minimum !== undefined) {
-    statements.push(_getMinimumValueAssert(propertyName, property.minimum));
+    statements.push(_gteAssert(propertyName, property.minimum));
   }
   if (property.exclusiveMinimum !== undefined) {
     statements.push(createSingleLineComment("exclusive minimum"));
     statements.push(
-      _getExclusiveMinimumValueAssert(propertyName, property.exclusiveMinimum)
+      _gtAssert(propertyName, property.exclusiveMinimum)
     );
   }
   if (property.maximum !== undefined) {
-    statements.push(_getMaximumValueAssert(propertyName, property.maximum));
+    statements.push(_lteAssert(propertyName, property.maximum));
   }
   if (property.exclusiveMaximum !== undefined) {
     statements.push(
-      _getExclusiveMaximumValueAssert(propertyName, property.exclusiveMaximum)
+      _ltAssert(propertyName, property.exclusiveMaximum)
     );
   }
   if (property.multipleOf !== undefined) {
@@ -142,14 +158,14 @@ export function _getNumberAsserts(
   return statements;
 }
 
-export function _getStringAsserts(
+function _getStringAsserts(
   propertyName: string,
   property: JsonSchema7StringType
 ): ts.Statement[] {
   const statements: ts.Statement[] = [];
   return statements;
 }
-export function _getDateAsserts(
+function _getDateAsserts(
   propertyName: string,
   property: JsonSchema7StringType
 ): ts.Statement[] {
@@ -157,3 +173,261 @@ export function _getDateAsserts(
   console.log(propertyName, property)
   return statements;
 }
+
+// utils
+
+function getProperties(properties: any[]) {
+  return Object.keys(properties).map((key) => {
+    return ts.factory.createPropertyAssignment(
+      key,
+      ts.factory.createIdentifier('Field'),
+    ) as unknown as ObjectLiteralElementLike;
+  })
+}
+
+function createSingleLineComment(text: string) {
+  return (ts.factory.createIdentifier(
+    `// ${text}`
+  ) as unknown) as ts.Statement;
+}
+
+// declarations
+
+function createClass(entity: any) {
+  const { properties } = entity;
+  // console.log(entity)
+  const props = getProperties(properties)
+  const assertFn = createAssertFunction();
+  const checkFn = createCheckFunction(entity);
+  const constructorFn = createConstructorFunction(entity);    
+
+  const members = [
+    constructorFn,
+    checkFn,
+    assertFn,
+  ];
+
+  return ts.factory.createClassDeclaration(
+    [
+      ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
+    ],
+    "Vaccine",
+    undefined,
+    [
+      ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
+        ts.factory.createExpressionWithTypeArguments(
+          ts.factory.createCallExpression(
+            ts.factory.createIdentifier('Struct'),
+            undefined,
+            [
+              ts.factory.createObjectLiteralExpression(
+                props, 
+                true
+              )
+            ]
+          ),
+          undefined
+        )
+      ])
+    ],
+    members
+  );
+
+}
+
+
+
+function createConstructorFunction(entity) {
+  const { properties } = entity;
+  
+  const props = Object.keys(properties).map(name => name)
+ 
+  // constructor params
+  const parameters = props.map(p => ts.factory.createParameterDeclaration(
+    undefined,
+    undefined,
+    ts.factory.createIdentifier(p),
+    undefined,
+    ts.factory.createTypeReferenceNode(
+      // todo : this should be the correct type, for now we always return Field 
+      ts.factory.createIdentifier('Field'), undefined
+    ),
+  ))
+ 
+  const superCall = ts.factory.createExpressionStatement(
+    ts.factory.createCallExpression(
+      ts.factory.createSuper(),
+      undefined,
+      [
+      ts.factory.createObjectLiteralExpression(
+        props.map(p => ts.factory.createShorthandPropertyAssignment(
+          ts.factory.createIdentifier(p),
+          undefined // uninitalized
+        ))
+      )
+    ])
+  )
+
+  const checkCall = ts.factory.createExpressionStatement(
+      ts.factory.createCallExpression(
+        ts.factory.createPropertyAccessExpression(
+          ts.factory.createThis(),
+          ts.factory.createIdentifier('check')
+        ),
+        undefined,
+        []
+      )
+  )
+  
+  const statements = [superCall, checkCall]
+
+  const fn = ts.factory.createConstructorDeclaration(
+    undefined,
+    parameters,
+    ts.factory.createBlock(
+      statements, true
+    ),
+  )
+  return fn
+}
+
+function _getCheckStatement(propertyName: string, property: any) {
+  const { type, format } = property;
+  const statements: ts.Statement[] = [];
+  switch (type) {
+    case "string":
+      if (format === 'date-time') {
+        statements.push(..._getDateAsserts(propertyName, property));
+      } else {
+        statements.push(..._getStringAsserts(propertyName, property));
+      }
+    case "number":
+      statements.push(..._getNumberAsserts(propertyName, property));
+    case "boolean":
+      statements.push(..._getBooleanAsserts(propertyName, property));
+  }
+  return statements
+}
+
+function createCheckFunction(entity: any) {
+  const { properties } = entity;
+
+  const parameters: ts.ParameterDeclaration[] = [];
+  console.log(entity)
+
+  const statements: ts.Statement[] = Object.entries(properties).map(
+    ([name, property]) => _getCheckStatement(name, property)
+  ).flat();
+ 
+  const checkFn = ts.factory.createMethodDeclaration(
+    [ts.factory.createModifier(ts.SyntaxKind.PublicKeyword)],
+    NO_ASTERISK,
+    "check",
+    NO_QUESTION_TOKEN,
+    NO_TYPED_PARAMS,
+    parameters,
+    NO_TYPED_NODE,
+    ts.factory.createBlock(statements, true)
+  );
+
+  return checkFn;
+}
+
+
+function createAssertFunction() {
+  return ts.factory.createMethodDeclaration(
+    NO_MODIFIERS,
+    NO_ASTERISK,
+    "_assert",
+    NO_QUESTION_TOKEN,
+    NO_TYPED_PARAMS,
+    [
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.factory.createIdentifier("expr"),
+        undefined,
+        ts.factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword)
+      ),
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.factory.createIdentifier("msg"),
+        ts.factory.createToken(ts.SyntaxKind.QuestionToken),
+        ts.factory.createKeywordTypeNode(ts.SyntaxKind.StringKeyword)
+      ),
+    ],
+    NO_TYPED_NODE,
+    ts.factory.createBlock(
+      [
+        // if (!expr) 
+        ts.factory.createIfStatement(
+          ts.factory.createPrefixUnaryExpression(
+            ts.SyntaxKind.ExclamationToken,
+            ts.factory.createIdentifier("expr")
+          ),
+          // throw new Error(msg)
+          ts.factory.createThrowStatement(
+            ts.factory.createNewExpression(
+              ts.factory.createIdentifier("Error"),
+              undefined,
+              [ts.factory.createIdentifier("msg")]
+            )
+          ),
+          // no else
+          undefined
+        ),
+      ],
+      false
+    )
+  );
+}
+
+function createImportStaments() {
+  const names = ts.factory.createNamedImports([
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Field')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('SmartContract')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('state')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('State')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('method')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Poseidon')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Bool')),
+    ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Struct'))
+  ])
+
+  return ts.factory.createImportDeclaration(
+    undefined,
+    ts.factory.createImportClause(false, undefined, names),
+    ts.factory.createStringLiteral('snarkyjs')
+  )
+}
+
+export function createEntity(name: string, definitions: any) {
+  
+  const entity = definitions[name];
+  const { properties } = entity;
+     
+  // single line import statement
+  const imports: ts.ImportDeclaration[] = [createImportStaments()];
+
+  // create class definitoin
+  const clazz = createClass(entity)
+
+  const printer = ts.createPrinter({
+    newLine: ts.NewLineKind.LineFeed,
+  });
+
+  // create source file including imports and class definition
+  const sf = ts.factory.createSourceFile(
+    [...imports, clazz],
+    ts.factory.createToken(ts.SyntaxKind.EndOfFileToken),
+    ts.NodeFlags.None
+  )
+  const source = printer.printFile(sf)
+
+  // if generated dir does not exist, create it
+  if (!fs.existsSync('./src/generated')) fs.mkdirSync('./src/generated')
+  // write created struct to file
+  fs.writeFileSync(`./src/generated/${name}.ts`, source)
+}
+
