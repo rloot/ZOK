@@ -10,6 +10,10 @@ const NO_QUESTION_TOKEN = undefined
 const NO_TYPED_PARAMS = undefined
 const NO_TYPED_NODE = undefined
 
+function _getTypeFromPropKey(key: string) {
+  return  key == 'boolean' ? 'Bool':'Field'
+}
+
 function _getAssertCallStatement(
   expr: ts.Expression,
   message: ts.Expression
@@ -181,7 +185,7 @@ function getProperties(properties: any[]) {
     const type = properties[key]?.type;
     return ts.factory.createPropertyAssignment(
       key,
-      ts.factory.createIdentifier(type == 'boolean' ? 'Bool':'Field'),
+      ts.factory.createIdentifier(_getTypeFromPropKey(type)),
     ) as unknown as ObjectLiteralElementLike;
   })
 }
@@ -254,7 +258,7 @@ function createConstructorFunction(entity) {
       undefined,
       ts.factory.createTypeReferenceNode(
         // todo : this should be the correct type, for now we always return Field 
-        ts.factory.createIdentifier(type == 'boolean' ? 'Bool':'Field'), undefined
+        ts.factory.createIdentifier(_getTypeFromPropKey(type)), undefined
       ),
     )
   })
