@@ -11,14 +11,28 @@ export const Square = z.object({
   num: z.number().gte(0)
 });
 
-export const Benchmark = z.object({
-    a: z.number().positive(),
-    b: z.boolean(),
+export const FieldStruct = z.object({
     c: z.string().min(4).max(40),
-    d: z.date().max(new Date(2029, 12, 31)),
     e: z.number().min(0).max(100),
     f: z.number().lt(0),
     g: z.number().gt(0),
     h: z.number().lte(0),
     i: z.number().gte(0),
 }).describe('Benchmark schema definitions')
+
+export const BoolStruct = z.object({
+  boolean1: z.boolean()
+});
+
+
+// export const Benchmark = z.object({
+//     a: z.number().positive(),
+//     b: z.boolean(),
+//     c: z.string().min(4).max(40),
+//     d: z.date().max(new Date(2029, 12, 31)),
+//     e: z.number().min(0).max(100),
+//     f: z.number().lt(0),
+//     g: z.number().gt(0),
+//     h: z.number().lte(0),
+//     i: z.number().gte(0),
+// }).describe('Benchmark schema definitions')

@@ -178,9 +178,10 @@ function _getDateAsserts(
 
 function getProperties(properties: any[]) {
   return Object.keys(properties).map((key) => {
+    const type = properties[key]?.type;
     return ts.factory.createPropertyAssignment(
       key,
-      ts.factory.createIdentifier('Field'),
+      ts.factory.createIdentifier(type == 'boolean' ? 'Bool':'Field'),
     ) as unknown as ObjectLiteralElementLike;
   })
 }
@@ -195,7 +196,7 @@ function createSingleLineComment(text: string) {
 
 function createClass(entity: any) {
   const { properties } = entity;
-  // console.log(entity)
+
   const props = getProperties(properties)
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
@@ -241,18 +242,22 @@ function createConstructorFunction(entity) {
   const { properties } = entity;
   
   const props = Object.keys(properties).map(name => name)
- 
+  
   // constructor params
-  const parameters = props.map(p => ts.factory.createParameterDeclaration(
-    undefined,
-    undefined,
-    ts.factory.createIdentifier(p),
-    undefined,
-    ts.factory.createTypeReferenceNode(
-      // todo : this should be the correct type, for now we always return Field 
-      ts.factory.createIdentifier('Field'), undefined
-    ),
-  ))
+  const parameters = props.map((key) => {
+    const type = properties[key]?.type;
+  
+    return ts.factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      ts.factory.createIdentifier(key),
+      undefined,
+      ts.factory.createTypeReferenceNode(
+        // todo : this should be the correct type, for now we always return Field 
+        ts.factory.createIdentifier(type == 'boolean' ? 'Bool':'Field'), undefined
+      ),
+    )
+  })
  
   const superCall = ts.factory.createExpressionStatement(
     ts.factory.createCallExpression(
@@ -260,10 +265,12 @@ function createConstructorFunction(entity) {
       undefined,
       [
       ts.factory.createObjectLiteralExpression(
-        props.map(p => ts.factory.createShorthandPropertyAssignment(
-          ts.factory.createIdentifier(p),
-          undefined // uninitalized
-        ))
+        props.map(key => { 
+          return ts.factory.createShorthandPropertyAssignment(
+            ts.factory.createIdentifier(key),
+            undefined // uninitalized
+           )
+        })
       )
     ])
   )
