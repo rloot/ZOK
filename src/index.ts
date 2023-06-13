@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as fs from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import ts, { ObjectLiteralElementLike } from "typescript";
