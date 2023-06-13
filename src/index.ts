@@ -2,13 +2,13 @@ import * as fs from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
-import { Vaccine, Benchmark, Square } from "./cases"
+import { Vaccine, FieldStruct, Square, BoolStruct } from "./cases"
 import { ZodObject } from "zod";
 import { createEntity } from "./codegen";
 
 export function generate(filename: string, schema: ZodObject<any>) {
   // use the right name
-  const json = zodToJsonSchema(schema, "Benchmark")
+  const json = zodToJsonSchema(schema, "BoolStruct")
   const { definitions } = json
   if (definitions === undefined) {
     throw Error('undefined definitions')
@@ -20,5 +20,5 @@ export function generate(filename: string, schema: ZodObject<any>) {
   }  
 }
 // const vaccineJson = zodToJsonSchema(Vaccine, "vaccine");
-const benchmarkJson = zodToJsonSchema(Benchmark, "Benchmark");
-generate('Vaccine', Vaccine)
+const benchmarkJson = zodToJsonSchema(BoolStruct, "BoolStruct");
+generate('BoolStruct', BoolStruct)
