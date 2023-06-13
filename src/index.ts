@@ -1,10 +1,7 @@
 #!/usr/bin/env node
-
-import * as fs from "fs";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import ts, { ObjectLiteralElementLike } from "typescript";
 
-import { Vaccine, Benchmark, Square } from "./cases"
+import * as cases from "./cases"
 import { ZodObject } from "zod";
 import { createEntity } from "./codegen";
 
@@ -21,6 +18,17 @@ export function generate(filename: string, schema: ZodObject<any>) {
     }
   }  
 }
-// const vaccineJson = zodToJsonSchema(Vaccine, "vaccine");
-const benchmarkJson = zodToJsonSchema(Benchmark, "Benchmark");
-generate('Vaccine', Vaccine)
+
+const flags = process.argv.slice(2);
+const name = flags[0];
+const requestedCase = flags[1];
+
+if(!name) {
+  throw new Error('No name provided');
+}
+
+if(!requestedCase) {
+  throw new Error('No case');
+}
+
+generate(name, cases[requestedCase])
