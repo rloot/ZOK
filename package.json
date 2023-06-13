@@ -14,7 +14,7 @@
     "typescript": "^5.0.4",
     "zod": "^3.21.4",
     "snarkyjs": "^0.10.1",
-    "zod-to-json-schema": "^3.20.4"
+    "zod-to-json-schema": "https://github.com/rloot/zod-to-json-schema.git"
   },
   "devDependencies": {
     "@types/node": "^20.1.1",
