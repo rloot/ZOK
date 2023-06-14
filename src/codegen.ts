@@ -198,7 +198,7 @@ function createSingleLineComment(text: string) {
 
 // declarations
 
-function createClass(entity: any) {
+function createClass(name: string, entity: any) {
   const { properties } = entity;
 
   const props = getProperties(properties)
@@ -216,7 +216,7 @@ function createClass(entity: any) {
     [
       ts.factory.createModifier(ts.SyntaxKind.ExportKeyword)
     ],
-    "Vaccine",
+    name,
     undefined,
     [
       ts.factory.createHeritageClause(ts.SyntaxKind.ExtendsKeyword, [
@@ -422,7 +422,7 @@ export function createEntity(name: string, definitions: any) {
   const imports: ts.ImportDeclaration[] = [createImportStaments()];
 
   // create class definitoin
-  const clazz = createClass(entity)
+  const clazz = createClass(name, entity)
 
   const printer = ts.createPrinter({
     newLine: ts.NewLineKind.LineFeed,
