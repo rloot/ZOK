@@ -23,3 +23,9 @@ export const FieldStruct = z.object({
 export const BoolStruct = z.object({
   boolean1: z.boolean()
 });
+
+export const DateStruct = z.object({
+  birthday: z.date(),
+  minDate: z.date().min(new Date('1970-01-02')),
+  maxDate: z.date().min(new Date('1972-01-02')),
+});
