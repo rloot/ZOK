@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
+import { JsonSchema7DateType } from "zod-to-json-schema/src/parsers/date";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
 
@@ -171,10 +172,18 @@ function _getStringAsserts(
 }
 function _getDateAsserts(
   propertyName: string,
-  property: JsonSchema7StringType
+  property: JsonSchema7DateType
 ): ts.Statement[] {
   const statements: ts.Statement[] = [];
-  console.log(propertyName, property)
+  console.log('>>>>> ', property);
+  if (property.minimum !== undefined) {
+    statements.push(_gteAssert(propertyName, property.minimum));
+  }
+
+  if (property.maximum !== undefined) {
+    statements.push(_lteAssert(propertyName, property.maximum));
+  }
+
   return statements;
 }
 
@@ -305,12 +314,14 @@ function createConstructorFunction(entity) {
 function _getCheckStatement(propertyName: string, property: any) {
   const { type, format } = property;
   const statements: ts.Statement[] = [];
+  console.log('>>>>> ', type, format);
+
   switch (type) {
     case "string":
-      if (format === 'date-time') {
+      statements.push(..._getStringAsserts(propertyName, property));
+    case "integer":
+      if (format === 'unix-time') {
         statements.push(..._getDateAsserts(propertyName, property));
-      } else {
-        statements.push(..._getStringAsserts(propertyName, property));
       }
     case "number":
       statements.push(..._getNumberAsserts(propertyName, property));

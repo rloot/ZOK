@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { zodToJsonSchema } from "zod-to-json-schema";
-
 import * as cases from "./cases"
 import { ZodObject } from "zod";
 import { createEntity } from "./codegen";
