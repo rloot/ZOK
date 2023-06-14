@@ -27,5 +27,5 @@ export const BoolStruct = z.object({
 export const DateStruct = z.object({
   birthday: z.date(),
   minDate: z.date().min(new Date('1970-01-02')),
-  maxDate: z.date().min(new Date('1972-01-02')),
+  maxDate: z.date().max(new Date('1972-01-02')),
 });

@@ -170,12 +170,13 @@ function _getStringAsserts(
   const statements: ts.Statement[] = [];
   return statements;
 }
+
 function _getDateAsserts(
   propertyName: string,
   property: JsonSchema7DateType
 ): ts.Statement[] {
   const statements: ts.Statement[] = [];
-  console.log('>>>>> ', property);
+  
   if (property.minimum !== undefined) {
     statements.push(_gteAssert(propertyName, property.minimum));
   }
@@ -314,7 +315,6 @@ function createConstructorFunction(entity) {
 function _getCheckStatement(propertyName: string, property: any) {
   const { type, format } = property;
   const statements: ts.Statement[] = [];
-  console.log('>>>>> ', type, format);
 
   switch (type) {
     case "string":
@@ -335,7 +335,6 @@ function createCheckFunction(entity: any) {
   const { properties } = entity;
 
   const parameters: ts.ParameterDeclaration[] = [];
-  console.log(entity)
 
   const statements: ts.Statement[] = Object.entries(properties).map(
     ([name, property]) => _getCheckStatement(name, property)
