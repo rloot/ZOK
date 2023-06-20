@@ -548,7 +548,7 @@ export function createEntity(name: string, definitions: any) {
   const { properties } = entity;
 
   // single line import statement
-  const imports: ts.ImportDeclaration[] = [createImportStaments()];
+  const imports: ts.ImportDeclaration[] = createImportStaments();
 
   // create class definitoin
   const clazz = createClass(name, entity)
