@@ -423,11 +423,26 @@ function createImportStaments() {
     ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('Struct'))
   ])
 
-  return ts.factory.createImportDeclaration(
-    undefined,
-    ts.factory.createImportClause(false, undefined, names),
-    ts.factory.createStringLiteral('snarkyjs')
-  )
+  return [
+    ts.factory.createImportDeclaration(
+      undefined,
+      ts.factory.createImportClause(false, undefined, names),
+      ts.factory.createStringLiteral('snarkyjs')
+    ),
+    ts.factory.createImportDeclaration(
+      undefined,
+      ts.factory.createImportClause(
+        false,
+        undefined,
+        ts.factory.createNamedImports(
+          [
+            ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier('CircuitNumber'))
+          ]
+        )
+      ),
+      ts.factory.createStringLiteral('snarkyjs-math/build/src/snarkyjs-math')
+    )
+  ]
 }
 
 export function createEntity(name: string, definitions: any) {
