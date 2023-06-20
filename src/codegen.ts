@@ -380,7 +380,6 @@ function createCheckFunction(entity: any) {
   return checkFn;
 }
 
-
 function createAssertFunction() {
   return ts.factory.createMethodDeclaration(
     NO_MODIFIERS,
@@ -552,7 +551,7 @@ function create_get() {
   )
 
   const fn = ts.factory.createMethodDeclaration(
-    undefined,
+    [ts.factory.createModifier(ts.SyntaxKind.PrivateKeyword)],
     undefined,
     ts.factory.createIdentifier('_get'),
     undefined,
@@ -620,13 +619,11 @@ function createPropertyGetter(propertyName: string, fieldId: number, position: n
     // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
     block
   )
-
   return getter
-  
 }
 
 function create_set() {
-  const offsetStatement = ts.factory.createVariableStatement(
+   const offsetStatement = ts.factory.createVariableStatement(
     undefined,
     ts.factory.createVariableDeclarationList(
       [
@@ -692,42 +689,42 @@ function create_set() {
   )
 
   const fn = ts.factory.createMethodDeclaration(
+    [ts.factory.createModifier(ts.SyntaxKind.PrivateKeyword)],
+    undefined,
+    ts.factory.createIdentifier('_set'),
+    undefined,
+    undefined,
+    [
+      ts.factory.createParameterDeclaration(
         undefined,
         undefined,
-        ts.factory.createIdentifier('_set'),
+        ts.factory.createIdentifier('field'),
+        undefined,
+        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('Field'), undefined),
+      ),
+      ts.factory.createParameterDeclaration(
         undefined,
         undefined,
-        [
-          ts.factory.createParameterDeclaration(
-            undefined,
-            undefined,
-            ts.factory.createIdentifier('field'),
-            undefined,
-            ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('Field'), undefined),
-          ),
-          ts.factory.createParameterDeclaration(
-            undefined,
-            undefined,
-            ts.factory.createIdentifier('position'),
-            undefined,
-            ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
-          ),
-          ts.factory.createParameterDeclaration(
-            undefined,
-            undefined,
-            ts.factory.createIdentifier('value'),
-            undefined,
-            ts.factory.createUnionTypeNode([
-              ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
-              ts.factory.createTypeReferenceNode(
-                ts.factory.createIdentifier('Field'),
-                undefined
-              )
-            ])
+        ts.factory.createIdentifier('position'),
+        undefined,
+        ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+      ),
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.factory.createIdentifier('value'),
+        undefined,
+        ts.factory.createUnionTypeNode([
+          ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+          ts.factory.createTypeReferenceNode(
+            ts.factory.createIdentifier('Field'),
+            undefined
           )
-        ],
-        undefined,
-        body
+        ])
+      )
+    ],
+    undefined,
+    body
   )
 
   return fn
