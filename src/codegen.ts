@@ -230,9 +230,13 @@ function createClass(name: string, entity: any) {
     return [createPropertyGetter(key, 1, index), createPropertySetter(key, 1, index)]
   })
 
+
+
   const members = [
     constructorFn,
     checkFn,
+    create_get(),
+    create_set(),
     ...(accessors.flat())
     // assertFn,
   ];
@@ -426,6 +430,166 @@ function createAssertFunction() {
   );
 }
 
+function create_get() {
+
+  // const offset = 10 ** position
+  // const r = value.mod(offset * 10)
+  // const v = r.div(offset)
+
+  const v = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          ts.factory.createIdentifier('v'),
+          undefined,
+          undefined,
+          ts.factory.createNewExpression(
+            ts.factory.createIdentifier('CircuitNumber'),
+            undefined,
+            [
+              ts.factory.createIdentifier('value'),
+              ts.factory.createNewExpression(
+                ts.factory.createIdentifier('Field'),
+                undefined,
+                [
+                  ts.factory.createNumericLiteral('1')
+                ]
+              )
+            ]
+          )
+        )
+      ],
+      ts.NodeFlags.Const
+    )
+  )
+
+  const offset = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          ts.factory.createIdentifier('offset'),
+          undefined,
+          undefined,
+          ts.factory.createCallExpression(
+            ts.factory.createPropertyAccessExpression(
+              ts.factory.createIdentifier('CircuitNumber'),
+              ts.factory.createIdentifier('from')
+            ),
+            undefined,
+            [
+              ts.factory.createBinaryExpression(
+                ts.factory.createNumericLiteral('10'),
+                ts.factory.createToken(ts.SyntaxKind.AsteriskAsteriskToken),
+                ts.factory.createIdentifier('position')
+              )
+            ]
+          )
+        )
+      ],
+      ts.NodeFlags.Const
+    )
+  )
+
+
+  const remainder = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          ts.factory.createIdentifier('r'),
+          undefined,
+          undefined,
+          ts.factory.createCallExpression(
+            ts.factory.createPropertyAccessExpression(
+              ts.factory.createIdentifier('v'),
+              ts.factory.createIdentifier('mod')
+            ),
+            undefined,
+            [
+              ts.factory.createCallExpression(
+                ts.factory.createPropertyAccessExpression(
+                  ts.factory.createIdentifier('offset'),
+                  ts.factory.createIdentifier('sub')
+                ),
+                undefined,
+                [
+                  ts.factory.createCallExpression(
+                    ts.factory.createPropertyAccessExpression(
+                      ts.factory.createIdentifier('CircuitNumber'),
+                      ts.factory.createIdentifier('from')
+                    ),
+                    undefined,
+                    [ts.factory.createNumericLiteral('1')]
+                  )
+                ]
+              )
+            ]
+          )
+        )
+      ],
+      ts.NodeFlags.Const
+    )
+  )
+
+  const ret = ts.factory.createReturnStatement(
+    ts.factory.createCallExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createCallExpression(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createIdentifier('r'),
+            ts.factory.createIdentifier('div')
+          ),
+          undefined,
+          [ts.factory.createIdentifier('offset')]
+        ),
+        ts.factory.createIdentifier('toField')
+      ),
+      undefined,
+      []
+    )
+  )
+
+  const fn = ts.factory.createMethodDeclaration(
+    undefined,
+    undefined,
+    ts.factory.createIdentifier('_get'),
+    undefined,
+    undefined,
+    [
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.factory.createIdentifier('value'),
+        undefined,
+        ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('Field'), undefined),
+        undefined
+      ),
+      ts.factory.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.factory.createIdentifier('position'),
+        undefined,
+        ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+        undefined
+      )
+    ],
+    undefined,
+    ts.factory.createBlock(
+      [
+        v,
+        offset,
+        remainder,
+        ret
+      ],
+      true
+    )
+  )
+  return fn;
+}
+
+
 function createPropertyGetter(propertyName: string, fieldId: number, position: number) {
 
   // return this._extract(this.field1, position)
@@ -433,7 +597,7 @@ function createPropertyGetter(propertyName: string, fieldId: number, position: n
     ts.factory.createCallExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createThis(),
-        ts.factory.createIdentifier('_extract')
+        ts.factory.createIdentifier('_get')
       ),
       undefined,
       [
@@ -461,6 +625,109 @@ function createPropertyGetter(propertyName: string, fieldId: number, position: n
   return getter
   
 }
+
+function create_set() {
+  const offsetStatement = ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          ts.factory.createIdentifier('offset'),
+          undefined,
+          undefined,
+          ts.factory.createBinaryExpression(
+            ts.factory.createBinaryExpression(
+              ts.factory.createNumericLiteral('10'),
+              ts.factory.createToken(ts.SyntaxKind.AsteriskAsteriskToken),
+              ts.factory.createIdentifier('position')
+            ),
+            ts.factory.createToken(ts.SyntaxKind.MinusToken),
+            ts.factory.createNumericLiteral('1')
+          )
+        )
+      ],
+      ts.NodeFlags.Const
+    )
+  )
+  const body = ts.factory.createBlock(
+    [
+      offsetStatement,
+      ts.factory.createReturnStatement(
+        ts.factory.createCallExpression(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createCallExpression(
+              ts.factory.createPropertyAccessExpression(
+                ts.factory.createCallExpression(
+                  ts.factory.createPropertyAccessExpression(
+                    ts.factory.createIdentifier('field'),
+                    ts.factory.createIdentifier('sub')
+                  ),
+                  undefined,
+                  [
+                    ts.factory.createCallExpression(
+                      ts.factory.createPropertyAccessExpression(
+                        ts.factory.createThis(),
+                        ts.factory.createIdentifier('_get')
+                      ),
+                      undefined,
+                      [
+                        ts.factory.createIdentifier('field'),
+                        ts.factory.createIdentifier('position')
+                      ]
+                    )
+                  ]
+                ),
+                ts.factory.createIdentifier('sub')
+              ),
+              undefined,
+              [ts.factory.createIdentifier('offset')]
+            ),
+            ts.factory.createIdentifier('add')
+          ),
+          undefined,
+          [ts.factory.createIdentifier('value')]
+        )
+      )
+    ],
+    true
+  )
+
+  const fn = ts.factory.createMethodDeclaration(
+        undefined,
+        undefined,
+        ts.factory.createIdentifier('_set'),
+        undefined,
+        undefined,
+        [
+          ts.factory.createParameterDeclaration(
+            undefined,
+            undefined,
+            ts.factory.createIdentifier('field'),
+            undefined,
+            ts.factory.createTypeReferenceNode(ts.factory.createIdentifier('Field'), undefined),
+          ),
+          ts.factory.createParameterDeclaration(
+            undefined,
+            undefined,
+            ts.factory.createIdentifier('position'),
+            undefined,
+            ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+          ),
+          ts.factory.createParameterDeclaration(
+            undefined,
+            undefined,
+            ts.factory.createIdentifier('value'),
+            undefined,
+            ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword)
+          )
+        ],
+        undefined,
+        body
+  )
+
+  return fn
+}
+
 
 function createPropertySetter(propertyName: string, fieldId: number, position: number) {
   const statement = ts.factory.createExpressionStatement(
