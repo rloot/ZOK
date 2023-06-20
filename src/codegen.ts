@@ -589,7 +589,6 @@ function create_get() {
   return fn;
 }
 
-
 function createPropertyGetter(propertyName: string, fieldId: number, position: number) {
 
   // return this._extract(this.field1, position)
@@ -718,7 +717,13 @@ function create_set() {
             undefined,
             ts.factory.createIdentifier('value'),
             undefined,
-            ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword)
+            ts.factory.createUnionTypeNode([
+              ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+              ts.factory.createTypeReferenceNode(
+                ts.factory.createIdentifier('Field'),
+                undefined
+              )
+            ])
           )
         ],
         undefined,
