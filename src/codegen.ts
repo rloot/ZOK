@@ -190,14 +190,23 @@ function _getDateAsserts(
 
 // utils
 
-function getProperties(properties: any[]) {
-  return Object.keys(properties).map((key) => {
-    const type = properties[key]?.type;
-    return ts.factory.createPropertyAssignment(
-      key,
-      ts.factory.createIdentifier(_getTypeFromPropKey(type)),
-    ) as unknown as ObjectLiteralElementLike;
-  })
+function getProperties(properties: any[], compact: boolean = true) {
+  if (!compact) {
+    return Object.keys(properties).map((key) => {
+      const type = properties[key]?.type;
+      return ts.factory.createPropertyAssignment(
+        key,
+        ts.factory.createIdentifier(_getTypeFromPropKey(type)),
+      ) as unknown as ObjectLiteralElementLike;
+    })
+  } else {
+    return [
+      ts.factory.createPropertyAssignment(
+        "_field1",
+        ts.factory.createIdentifier('Field'),
+      ) as unknown as ObjectLiteralElementLike
+    ]
+  }
 }
 
 function createSingleLineComment(text: string) {
@@ -214,6 +223,8 @@ function createClass(name: string, entity: any) {
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
   const constructorFn = createConstructorFunction(entity);
+
+  const props = getProperties(properties)
 
   const accessors = Object.keys(properties).map((key, index) => {
     return [createPropertyGetter(key, 1, index), createPropertySetter(key, 1, index)]
