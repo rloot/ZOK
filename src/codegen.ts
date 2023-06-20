@@ -211,15 +211,19 @@ function createSingleLineComment(text: string) {
 function createClass(name: string, entity: any) {
   const { properties } = entity;
 
-  const props = getProperties(properties)
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
   const constructorFn = createConstructorFunction(entity);
 
+  const accessors = Object.keys(properties).map((key, index) => {
+    return [createPropertyGetter(key, 1, index), createPropertySetter(key, 1, index)]
+  })
+
   const members = [
     constructorFn,
     checkFn,
-    assertFn,
+    ...(accessors.flat())
+    // assertFn,
   ];
 
   return ts.factory.createClassDeclaration(
@@ -409,6 +413,88 @@ function createAssertFunction() {
       false
     )
   );
+}
+
+function createPropertyGetter(propertyName: string, fieldId: number, position: number) {
+
+  // return this._extract(this.field1, position)
+  const returnStatement = ts.factory.createReturnStatement(
+    ts.factory.createCallExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createThis(),
+        ts.factory.createIdentifier('_extract')
+      ),
+      undefined,
+      [
+        ts.factory.createPropertyAccessExpression(
+          ts.factory.createThis(),
+          ts.factory.createIdentifier('_field' + fieldId)
+        ),
+        ts.factory.createNumericLiteral(position)
+      ]
+    )
+  )
+  const block = ts.factory.createBlock(
+    [returnStatement],
+    true
+  )
+  const getter = ts.factory.createGetAccessorDeclaration(
+    undefined,
+    ts.factory.createIdentifier(propertyName),
+    [],
+    undefined,
+    // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+    block
+  )
+
+  return getter
+  
+}
+
+function createPropertySetter(propertyName: string, fieldId: number, position: number) {
+  const statement = ts.factory.createExpressionStatement(
+    ts.factory.createBinaryExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createThis(),
+        ts.factory.createIdentifier('_field' + fieldId)
+      ),
+      ts.factory.createToken(ts.SyntaxKind.FirstAssignment),
+      ts.factory.createCallExpression(
+        ts.factory.createPropertyAccessExpression(
+          ts.factory.createThis(),
+          ts.factory.createIdentifier('_set')
+        ),
+        undefined,
+        [
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createThis(),
+            ts.factory.createIdentifier('_field' + fieldId)
+          ),
+          ts.factory.createNumericLiteral(position),
+          ts.factory.createIdentifier('value')
+        ]
+      )
+    )
+  )
+  const params = [
+    ts.factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      ts.factory.createIdentifier('value'),
+      undefined,
+      undefined,
+      // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword)
+    )
+  ]
+
+  const body = ts.factory.createBlock([statement], true)
+  const setter = ts.factory.createSetAccessorDeclaration(
+    undefined,
+    ts.factory.createIdentifier(propertyName),
+    params,
+    body,
+  )
+  return setter
 }
 
 function createImportStaments() {
