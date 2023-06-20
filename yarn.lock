@@ -506,9 +506,10 @@ yargs@^12.0.5:
     y18n "^3.2.1 || ^4.0.0"
     yargs-parser "^11.1.1"
 
-"zod-to-json-schema@https://github.com/rloot/zod-to-json-schema.git":
-  version "3.21.1"
-  resolved "https://github.com/rloot/zod-to-json-schema.git#159dc889d1f6e6215475a9559a30110d878fed00"
+zod-to-json-schema@3.21.2:
+  version "3.21.2"
+  resolved "https://registry.yarnpkg.com/zod-to-json-schema/-/zod-to-json-schema-3.21.2.tgz#74dbbf97863c8b3f0576beb44e0af52382596fe4"
+  integrity sha512-02yfKymfmIf2rM/5LYGlyw0daEel/f3MsSGMNJZWWf44ato+Y+diFugOpDtgvEUn3cYM5oDAGWW2NHeSD4mByw==
 
 zod@^3.21.4:
   version "3.21.4"

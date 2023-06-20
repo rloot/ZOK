@@ -6,8 +6,12 @@ import { createEntity } from "./codegen";
 
 export function generate(filename: string, schema: ZodObject<any>) {
   // use the right name
-  const json = zodToJsonSchema(schema, "BoolStruct")
+  const json = zodToJsonSchema(schema, { name: filename, dateStrategy: 'integer' })
+
   const { definitions } = json
+
+  console.log(definitions);
+
   if (definitions === undefined) {
     throw Error('undefined definitions')
   } else {
