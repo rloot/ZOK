@@ -23,6 +23,7 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^20.1.1",
+    "snarkyjs-math": "^0.1.0",
     "ts-creator": "^1.2.5"
   }
 }
