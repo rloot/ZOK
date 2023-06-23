@@ -26,6 +26,7 @@ const flags = process.argv.slice(2);
 const name = flags[0];
 const requestedCase = flags[1];
 
+
 if(!name) {
   throw new Error('No name provided');
 }
