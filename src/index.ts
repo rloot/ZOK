@@ -26,12 +26,22 @@ const flags = process.argv.slice(2);
 const name = flags[0];
 const requestedCase = flags[1];
 
-if(!name) {
-  throw new Error('No name provided');
+if (flags.length > 1) {
+  if(!name) {
+    throw new Error('No name provided');
+  }
+  
+  if(!requestedCase) {
+    throw new Error('No case');
+  }
+  generate(name, cases[requestedCase])
+  
+} else {
+  for (const key in cases) {
+    if (Object.hasOwnProperty.call(cases, key)) {
+      const schema = cases[key];
+      generate(key, schema)
+    }
+  }
 }
 
-if(!requestedCase) {
-  throw new Error('No case');
-}
-
-generate(name, cases[requestedCase])

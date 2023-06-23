@@ -23,7 +23,7 @@ yarn zok
 ```
 Specify a single case.
 ```ts
-zok file_name zod_schema_case
+yarn zok file_name zod_schema_case
 ```
 
 3. Import the generated Structs into you ZkDapp
