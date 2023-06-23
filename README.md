@@ -2,8 +2,9 @@
 
 ZOK is a snakyJs utility that allows developers to express and validate the structure of their data in a reusable format.
 
+## Install
 ```
-yarn
+yarn add zok
 ```
 
 ## Run PoC
