@@ -7,21 +7,15 @@ ZOK is a snakyJs utility that allows developers to express and validate the stru
 yarn add zok
 ```
 
-## Run PoC
-
-```
-yarn start
-```
-
 ## How to use
-1. Describe schemas with zod under the root folder in cases.ts
+1. Describe the schemas with zod under the root folder in schemas.ts
 2. Execute CLI 
 
-Generate a file for every zod schema case.
+Generate a file for every zod schema schemas.
 ```ts
 yarn zok 
 ```
-Specify a single case.
+Specify a single schema.
 ```ts
 yarn zok file_name zod_schema_case
 ```
@@ -29,7 +23,7 @@ yarn zok file_name zod_schema_case
 3. Import the generated Structs into you ZkDapp
 
 ```ts
-import zod_schema_case from "structs/file_name.ts/
+import zod_schema_case from "structs/file_name.ts"
 ```
 
 ## Example
@@ -47,7 +41,7 @@ export const FieldStruct = z.object({
 
 ### Generated struct
 ```ts
-// ./structs/FieldStruct 
+// ./structs/FieldStruct.ts" 
 import { Field } from 'snarkyjs';
 export class FieldStruct extends Struct({
     f: Field,
@@ -71,7 +65,7 @@ export class FieldStruct extends Struct({
 }
 ```
 
-### Consume generated struct
+### Import and consume 
 ```ts
 // index.ts
 import FieldStruct from './structs/FieldStruct'; 
@@ -83,3 +77,12 @@ const field = new FieldStruct(
   Field(1),
 );
 ```
+
+
+## Supported types
+
+| zod type     | zod restraint     | snarky type |
+|--------------|-----------|------------|
+| z.number()      | .min() .max() .lt() .lt() .lte() .gte() .positive()| Field       |
+| z.date()      | .min() .max()  | Field       |
+| z.bool() |      | Bool        |
