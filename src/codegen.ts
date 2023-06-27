@@ -3,6 +3,8 @@ import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
 import { JsonSchema7DateType } from "zod-to-json-schema/src/parsers/date";
 import ts, { ObjectLiteralElementLike } from "typescript";
+import { getStorageLayout, pack } from "./codegen/properties";
+import { Slot, SlotValue } from "./types";
 
 const NO_MODIFIERS: ts.Modifier[] = [];
 const NO_ASTERISK: ts.AsteriskToken = undefined;
@@ -158,7 +160,22 @@ function _getDateAsserts(
 
 // utils
 
-function getProperties(properties: any[], compact: boolean = true) {
+function getPropertyMapping(properties: any[]) {
+  const propertyMapping = {}
+  let bitsize = 0  
+  for (const key in properties) {
+    const property = properties[key];
+    propertyMapping[key] = Math.floor(bitsize / 256)
+    // fixme: this assumes every property is uint64
+    bitsize += 64
+  }
+  return propertyMapping
+}
+
+function getProperties(
+  properties: {[key: string]: {type: string}},
+  compact: boolean = true
+) {
   if (!compact) {
     return Object.keys(properties).map((key) => {
       const type = properties[key]?.type;
@@ -168,12 +185,48 @@ function getProperties(properties: any[], compact: boolean = true) {
       ) as unknown) as ObjectLiteralElementLike;
     });
   } else {
-    return [
-      (ts.factory.createPropertyAssignment(
-        "_field1",
-        ts.factory.createIdentifier("Field")
-      ) as unknown) as ObjectLiteralElementLike,
-    ];
+    const packedProps = pack(
+      // fixme: replace 64 with correct data type bit size
+      Object.keys(properties).map((name) => [name, 64])
+    )
+
+    const fields: Slot = {}
+    let currentSlot = 0
+    for (const slot of packedProps) {
+      // console.log(slot)
+      let offset = 0
+      for (const [name, bits] of slot) {
+        fields[name] = {
+          name,
+          slot: currentSlot,
+          size: bits,
+          offset
+        }
+        offset += bits
+      }
+      currentSlot += 1
+    }
+
+    const props = []
+    let index = 0
+    for (const slot of packedProps) {
+      // add comments for each field
+      props.push(createSingleLineComment(`Field ${index} has ${slot.length} variables`))
+      for (const [name, bits] of slot) {
+        console.log(name)
+        props.push(createSingleLineComment(`${name}: ${bits} bits`))
+      }
+      props.push(
+        (
+          ts.factory.createPropertyAssignment(
+            `_field${index}`,
+            ts.factory.createIdentifier("Field")
+          ) as unknown
+        ) as ObjectLiteralElementLike
+      )
+      index += 1
+    }
+    return props
   }
 }
 
@@ -190,14 +243,30 @@ function createClass(name: string, entity: any) {
   const checkFn = createCheckFunction(entity);
   const constructorFn = createConstructorFunction(entity);
 
-  const props = getProperties(properties);
+  // console.log('creating props', properties)
+  const props = getProperties(properties, true);
 
-  const accessors = Object.keys(properties).map((key, index) => {
+  const propertyMapping = getPropertyMapping(properties)
+
+  const accessors = Object.entries(propertyMapping).map(([key, fieldId]: [string, number], index: number) => {
     return [
-      createPropertyGetter(key, 1, index),
-      createPropertySetter(key, 1, index),
-    ];
-  });
+      createPropertyGetter(key, fieldId, index),
+      createPropertySetter(key, fieldId, index)
+    ]
+  })
+
+  const layout = getStorageLayout(properties)
+  // console.log(layout)
+  // for (const slot of layout) {
+  //   console.log(slot)
+  //   createInitField(slot)
+  //   for (const v of slot) {
+  //     console.log(v)
+
+  //   }
+  // }
+
+  const fieldInitializators = layout.map(slot => createInitField(slot))
 
   const members = [
     constructorFn,
@@ -205,6 +274,7 @@ function createClass(name: string, entity: any) {
     create_get(),
     create_set(),
     ...accessors.flat(),
+    ...fieldInitializators
     // assertFn,
   ];
 
@@ -228,13 +298,58 @@ function createClass(name: string, entity: any) {
   );
 }
 
+function createInitField(slot: SlotValue[]) {
+  const statements = [
+    `let r = new Field(${slot[0].name});`,
+  ]
+
+  for (let i = 1; i < slot.length; i++) {
+    console.log(slot[i])
+    statements.push(
+      `r.add(${slot[i].name}.mul(BITS_${slot[i].offset}_MASK));`,
+    )
+  }
+  statements.push('return r')
+
+  const params = slot.map(
+    (v: SlotValue) => ts.factory.createParameterDeclaration(
+      undefined,
+      undefined,
+      ts.factory.createIdentifier(v.name),
+      undefined,
+      ts.factory.createTypeReferenceNode(
+        ts.factory.createIdentifier("Field"),
+        undefined
+      )
+  ))
+
+
+  // hack: parse the function body string into AST nodes
+  const sourceFile = ts.createSourceFile('', statements.join('\n'), ts.ScriptTarget.Latest, true);
+  const sts = sourceFile.statements;
+
+  console.log(slot)
+
+  // console.log(sts)
+  return ts.factory.createMethodDeclaration(
+    [ts.factory.createModifier(ts.SyntaxKind.StaticKeyword)],
+    NO_ASTERISK,
+    `_fillField${slot[0].slot}`,
+    NO_QUESTION_TOKEN,
+    NO_TYPED_PARAMS,
+    params,
+    NO_TYPED_NODE,
+    ts.factory.createBlock(sts, true)
+  )
+}
+
 function createConstructorFunction(entity) {
   const { properties } = entity;
 
-  const props = Object.keys(properties).map((name) => name);
+  // const props = Object.keys(properties).map((name) => name);
 
   // constructor params
-  const parameters = props.map((key) => {
+  const parameters = Object.keys(properties).map((key) => {
     const type = properties[key]?.type;
 
     return ts.factory.createParameterDeclaration(
@@ -249,21 +364,31 @@ function createConstructorFunction(entity) {
     )
   })
 
+  const layout = getStorageLayout(properties)
+
+  const superProps = layout.map((slot, index) => {
+    return ts.factory.createPropertyAssignment(
+      ts.factory.createIdentifier(`_field${index}`),
+      ts.factory.createCallExpression(
+        ts.factory.createIdentifier(`pepe._fillField${index}`),
+        undefined,
+        slot.map((v) => ts.factory.createIdentifier(v.name))
+      )
+    )
+  })
+  
   const superCall = ts.factory.createExpressionStatement(
     ts.factory.createCallExpression(
       ts.factory.createSuper(),
       undefined,
       [
-        ts.factory.createObjectLiteralExpression(
-          props.map(key => {
-            return ts.factory.createShorthandPropertyAssignment(
-              ts.factory.createIdentifier(key),
-              undefined // uninitalized
-            )
-          })
-        )
-      ])
+      ts.factory.createObjectLiteralExpression(
+        superProps,
+        true
+      )
+    ])
   )
+
 
   const checkCall = ts.factory.createExpressionStatement(
     ts.factory.createCallExpression(
@@ -382,6 +507,7 @@ function createAssertFunction() {
       false
     )
   );
+
 }
 
 function create_get() {
@@ -579,7 +705,7 @@ function create_set() {
           undefined,
           ts.factory.createBinaryExpression(
             ts.factory.createBinaryExpression(
-              ts.factory.createNumericLiteral("10"),
+              ts.factory.createNumericLiteral("2"),
               ts.factory.createToken(ts.SyntaxKind.AsteriskAsteriskToken),
               ts.factory.createIdentifier("position")
             ),
@@ -690,8 +816,7 @@ function createPropertySetter(
         ts.factory.createThis(),
         ts.factory.createIdentifier("_field" + fieldId)
       ),
-      ts.factory.createToken(ts.SyntaxKind.FirstAssignment),
-      ts.factory.createCallExpression(
+      ts.factory.createToken(ts.SyntaxKind.FirstAssignment),      ts.factory.createCallExpression(
         ts.factory.createPropertyAccessExpression(
           ts.factory.createThis(),
           ts.factory.createIdentifier("_set")
@@ -794,6 +919,38 @@ function createImportStaments() {
       ),
       ts.factory.createStringLiteral("snarkyjs-math/build/src/snarkyjs-math")
     ),
+    // todo : this file needs to be available in the project.
+    ts.factory.createImportDeclaration(
+      undefined,
+      ts.factory.createImportClause(
+        false,
+        undefined,
+        ts.factory.createNamedImports([
+          ts.factory.createImportSpecifier(
+            false,
+            undefined,
+            ts.factory.createIdentifier("BITS_64_MASK")
+          ),
+          ts.factory.createImportSpecifier(
+            false,
+            undefined,
+            ts.factory.createIdentifier("BITS_128_MASK")
+          ),
+          ts.factory.createImportSpecifier(
+            false,
+            undefined,
+            ts.factory.createIdentifier("BITS_192_MASK")
+          ),
+        ])
+      ),
+      ts.factory.createStringLiteral("../consts")
+    )
+    
+    // ts.factory.createImportDeclaration(
+    //   undefined,
+    //   undefined,
+    //   ts.factory.createStringLiteral('../consts')
+    // ),
   ];
 }
 
