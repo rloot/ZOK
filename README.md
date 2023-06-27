@@ -72,7 +72,8 @@ const field = new FieldStruct(
   Field(1),
 );
 ```
-
+### You can find a list off cases at our [mina test zdapp](https://github.com/rloot/ZOK-testDapp/blob/main/src/Cases.ts)
+---
 
 ## Supported types
 
