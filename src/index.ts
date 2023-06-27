@@ -10,8 +10,6 @@ export function generate(filename: string, schema: ZodObject<any>) {
 
   const { definitions } = json
 
-  console.log(definitions);
-
   if (definitions === undefined) {
     throw Error('undefined definitions')
   } else {

@@ -1,27 +1,21 @@
 # zok
 
-ZOK is a snakyJs utility that allows developers to express and validate the structure of their data in a reusable format.
+ZOK is a snakyJs utility that allows developers to express and validate the structure of their data in [zod](https://zod.dev/) schemas.
 
 ## Install
 ```
 yarn add zok
 ```
 
-## Run PoC
-
-```
-yarn start
-```
-
 ## How to use
-1. Describe schemas with zod under the root folder in cases.ts
+1. Describe the schemas with zod under the root folder in schemas.ts
 2. Execute CLI 
 
-Generate a file for every zod schema case.
+Generate a file for every zod schema schemas.
 ```ts
 yarn zok 
 ```
-Specify a single case.
+Specify a single schema.
 ```ts
 yarn zok file_name zod_schema_case
 ```
@@ -29,39 +23,62 @@ yarn zok file_name zod_schema_case
 3. Import the generated Structs into you ZkDapp
 
 ```ts
-import FieldCase from "structs/FieldCase.ts/
+import zod_schema_case from "structs/file_name.ts"
 ```
 
 ## Example
 
-### Zod schema
 ```ts
-export const DateStruct = z.object({
-  birthday: z.date(),
-  minDate: z.date().min(new Date('1970-01-02')),
-  maxDate: z.date().max(new Date('1972-01-02')),
-});
+// cases.ts
+export const FieldStruct = z.object({
+    f: z.number().lt(10),
+    g: z.number().gt(0),
+    h: z.number().lte(5),
+    i: z.number().gte(0),
+}).describe('Benchmark schema definitions')
 ```
 
-### generated struct
 ```ts
-export class date extends Struct({
-  birthday: Field,
-  minDate: Field,
-  maxDate: Field
+// ./structs/FieldStruct.ts 
+import { Field } from 'snarkyjs';
+export class FieldStruct extends Struct({
+    f: Field,
+    g: Field,
+    h: Field,
+    i: Field
 }) {
-  constructor(birthday: Field, minDate: Field, maxDate: Field) {
-    super({ birthday, minDate, maxDate });
-    this.check();
-  }
-  public check() {
-    this.minDate.assertGreaterThanOrEqual(86400000, "minDate must be greater or equal than 86400000")
-    this.maxDate.assertLessThanOrEqual(63158400000, "maxDate must be less or equal than 63158400000")
-  }
-  _assert(expr: unknown, msg?: string) {
-    if (!expr)
-      throw new Error(msg);
-  }
+    constructor(f: Field, g: Field, h: Field, i: Field) {
+        super({ f, g, h, i });
+        this.check();
+    }
+    public check() {
+        this.f.assertLessThan(10, "f must be less than 10")
+        // exclusive minimum
+        this.g.assertGreaterThan(0, "g must be greater than 0")
+        this.h.assertLessThanOrEqual(5, "h must be less or equal than 5")
+        this.i.assertGreaterThanOrEqual(0, "i must be greater or equal than 0")
+    }
 }
-
 ```
+
+```ts
+// index.ts
+import FieldStruct from './structs/FieldStruct'; 
+
+const field = new FieldStruct(
+  Field(1),
+  Field(99),
+  Field(1),
+  Field(1),
+);
+```
+### You can find a list off cases at our [mina test zdapp](https://github.com/rloot/ZOK-testDapp/blob/main/src/Cases.ts)
+---
+
+## Supported types
+
+| zod type     | zod restraint     | snarky type |
+|--------------|-----------|------------|
+| z.number()      | .min() .max() .lt() .lt() .lte() .gte() .positive()| Field       |
+| z.date()      | .min() .max()  | Field       |
+| z.bool() |      | Bool        |
