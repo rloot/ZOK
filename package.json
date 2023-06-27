@@ -7,13 +7,14 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "build": "tsc -p .",
     "start": "rm -rf src/structs.ts && npm run build && ts-node --esm --require ts-node/register build/src/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "mocha": "^10.2.0",
     "snarkyjs": "^0.10.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
@@ -22,7 +23,10 @@
   },
   "type": "module",
   "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
     "@types/node": "^20.1.1",
+    "chai": "^4.3.7",
     "snarkyjs-math": "^0.1.0",
     "ts-creator": "^1.2.5"
   }
