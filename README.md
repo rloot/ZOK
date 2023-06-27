@@ -1,6 +1,6 @@
 # zok
 
-ZOK is a snakyJs utility that allows developers to express and validate the structure of their data in a reusable format.
+ZOK is a snakyJs utility that allows developers to express and validate the structure of their data in [zod](https://zod.dev/) schemas.
 
 ## Install
 ```
@@ -28,7 +28,6 @@ import zod_schema_case from "structs/file_name.ts"
 
 ## Example
 
-### Zod schema
 ```ts
 // cases.ts
 export const FieldStruct = z.object({
@@ -39,9 +38,8 @@ export const FieldStruct = z.object({
 }).describe('Benchmark schema definitions')
 ```
 
-### Generated struct
 ```ts
-// ./structs/FieldStruct.ts" 
+// ./structs/FieldStruct.ts 
 import { Field } from 'snarkyjs';
 export class FieldStruct extends Struct({
     f: Field,
@@ -60,12 +58,9 @@ export class FieldStruct extends Struct({
         this.h.assertLessThanOrEqual(5, "h must be less or equal than 5")
         this.i.assertGreaterThanOrEqual(0, "i must be greater or equal than 0")
     }
-    _assert(expr: unknown, msg?: string) { if (!expr)
-        throw new Error(msg); }
 }
 ```
 
-### Import and consume 
 ```ts
 // index.ts
 import FieldStruct from './structs/FieldStruct'; 
