@@ -3,13 +3,13 @@
   "version": "0.0.1",
   "description": "zok library for zod to snarkyjs struct transformation",
   "bin": {
-    "zok": "dist/index.js"
+    "zok": "src/index.ts"
   },
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p .",
-    "start": "rm -rf src/structs.ts && npm run build &&  node dist/index.js"
+    "start": "rm -rf src/structs.ts && npm run build &&  ts-node src/index.ts"
   },
   "author": "",
   "license": "ISC",

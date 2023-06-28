@@ -22,7 +22,7 @@ export function generate(filename: string, schema: ZodObject<any>) {
   }  
 }
 
-let casesPath = 'dist/cases.js'
+let casesPath = process.cwd() + '/src/cases.ts'
 const flags = process.argv.slice(2);
 const specifiedCasesPath = flags[0];
 const requestedCase = flags[1];
