@@ -5,7 +5,6 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { ZodObject } from "zod";
 import { createEntity } from "./codegen";
-import { getRedirectStatus } from 'next/dist/lib/load-custom-routes';
 
 export function generate(filename: string, schema: ZodObject<any>) {
   // use the right name
@@ -22,7 +21,7 @@ export function generate(filename: string, schema: ZodObject<any>) {
   }  
 }
 
-const defaultCasesPath = '/src/cases.ts'
+const defaultCasesPath = 'dist/cases.js'
 
 const flags = process.argv.slice(2);
 const specifiedCasesPath = flags[0];
