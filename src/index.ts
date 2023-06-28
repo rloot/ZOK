@@ -16,27 +16,25 @@ export function generate(filename: string, schema: ZodObject<any>) {
     throw Error('undefined definitions')
   } else {
     for (const entity of Object.keys(definitions)) {
-      // console.log('create entity', entity)
       createEntity(entity, definitions);
     }
   }  
 }
 
-let casesPath = process.cwd() + '/src/cases.ts'
+const defaultCasesPath = '/src/cases.ts'
+
 const flags = process.argv.slice(2);
 const specifiedCasesPath = flags[0];
 const requestedCase = flags[1];
 
-if(specifiedCasesPath) {
-  casesPath = specifiedCasesPath;
+const casesPath = specifiedCasesPath || defaultCasesPath;
+const casesPathWithBaseDirectory = path.join(process.cwd(), casesPath);
+
+if (!fs.existsSync(casesPathWithBaseDirectory)) {
+  throw new Error(`'Cases path ${casesPathWithBaseDirectory} does not exist`);
 }
 
-if (!fs.existsSync(casesPath)) {
-  throw new Error('Cases path does not exist');
-}
-
-const url = path.resolve(casesPath);
-const cases = require(url);
+const cases = require(casesPathWithBaseDirectory);
 
 if(requestedCase) {
   const schema = cases[requestedCase];
