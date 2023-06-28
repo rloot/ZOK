@@ -1,5 +1,5 @@
 {
-  "name": "zok",
+  "name": "z0k",
   "version": "0.0.1",
   "description": "zok library for zod to snarkyjs struct transformation",
   "bin": {
