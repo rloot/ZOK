@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
 import { zodToJsonSchema } from "zod-to-json-schema";
-import * as cases from "./cases"
+
 import { ZodObject } from "zod";
 import { createEntity } from "./codegen";
 
@@ -20,20 +22,25 @@ export function generate(filename: string, schema: ZodObject<any>) {
   }  
 }
 
+let casesPath = 'dist/cases.js'
 const flags = process.argv.slice(2);
-const name = flags[0];
+const specifiedCasesPath = flags[0];
 const requestedCase = flags[1];
 
-if (flags.length > 1) {
-  if(!name) {
-    throw new Error('No name provided');
-  }
-  
-  if(!requestedCase) {
-    throw new Error('No case');
-  }
-  generate(name, cases[requestedCase])
-  
+if(specifiedCasesPath) {
+  casesPath = specifiedCasesPath;
+}
+
+if (!fs.existsSync(casesPath)) {
+  throw new Error('Cases path does not exist');
+}
+
+const url = path.resolve(casesPath);
+const cases = require(url);
+
+if(requestedCase) {
+  const schema = cases[requestedCase];
+  generate(requestedCase, schema)
 } else {
   for (const key in cases) {
     if (Object.hasOwnProperty.call(cases, key)) {
@@ -42,4 +49,3 @@ if (flags.length > 1) {
     }
   }
 }
-
