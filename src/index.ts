@@ -21,7 +21,7 @@ export function generate(filename: string, schema: ZodObject<any>) {
   }  
 }
 
-const defaultCasesPath = 'build/src/cases.js'
+const defaultCasesPath = 'build/src/schemas.js'
 
 const flags = process.argv.slice(2);
 const specifiedCasesPath = flags[0];
@@ -31,7 +31,7 @@ const casesPath = specifiedCasesPath || defaultCasesPath;
 const casesPathWithBaseDirectory = path.join(process.cwd(), casesPath);
 
 if (!fs.existsSync(casesPathWithBaseDirectory)) {
-  throw new Error(`'Cases path ${casesPathWithBaseDirectory} does not exist`);
+  throw new Error(`Cases path ${casesPathWithBaseDirectory} does not exist`);
 }
 
 const cases = require(casesPathWithBaseDirectory);

@@ -13,6 +13,8 @@ class DateStruct extends (0, snarkyjs_1.Struct)({
     }
     check() {
         this.minDate.assertGreaterThanOrEqual(86400000, "minDate must be greater or equal than 86400000");
+        this.minDate.assertGreaterThanOrEqual(86400000, "minDate must be greater or equal than 86400000");
+        this.maxDate.assertLessThanOrEqual(63158400000, "maxDate must be less or equal than 63158400000");
         this.maxDate.assertLessThanOrEqual(63158400000, "maxDate must be less or equal than 63158400000");
     }
     _assert(expr, msg) {

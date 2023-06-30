@@ -447,8 +447,8 @@ export function createEntity(name: string, definitions: any) {
   const source = printer.printFile(sf)
 
   // if generated dir does not exist, create it
-  if (!fs.existsSync('./src/generated')) fs.mkdirSync('./src/generated')
+  if (!fs.existsSync('./src/structs')) fs.mkdirSync('./src/structs')
   // write created struct to file
-  fs.writeFileSync(`./src/generated/${name}.ts`, source)
+  fs.writeFileSync(`./src/structs/${name}.ts`, source)
 }
 
