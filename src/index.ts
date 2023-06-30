@@ -22,12 +22,21 @@ export function generate(filename: string, schema: ZodObject<any>) {
 }
 
 const defaultCasesPath = 'build/src/schemas.js'
+let casesPath: string;
 
 const flags = process.argv.slice(2);
 const specifiedCasesPath = flags[0];
 const requestedCase = flags[1];
 
-const casesPath = specifiedCasesPath || defaultCasesPath;
+if (specifiedCasesPath) {
+  const filename = path.basename(specifiedCasesPath); // 'mytcfile.ts' 
+  const buildDirectory = 'build/src/';
+  const buildFilePath = path.join(buildDirectory, filename.replace(/\.ts$/, '.js'));
+
+  casesPath = buildFilePath;
+} else {
+  casesPath = defaultCasesPath
+}
 const casesPathWithBaseDirectory = path.join(process.cwd(), casesPath);
 
 if (!fs.existsSync(casesPathWithBaseDirectory)) {

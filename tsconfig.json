@@ -3,7 +3,7 @@
     "target": "es2020",
     "module": "ES2020",
     "lib": ["dom", "esnext"],
-    "outDir": "./build",
+    "outDir": "./build/src",
     "strict": false,
     "strictPropertyInitialization": false, // to enable generic constructors, e.g. on CircuitValue
     "skipLibCheck": true,
