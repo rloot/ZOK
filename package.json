@@ -1,6 +1,6 @@
 {
   "name": "z0k",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "description": "zok library for zod to snarkyjs struct transformation",
   "bin": {
     "z0k": "build/index.js"
@@ -21,7 +21,9 @@
   },
   "type": "module",
   "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.2",
     "@types/node": "^20.1.1",
+    "rollup": "^3.26.0",
     "ts-creator": "^1.2.5"
   }
 }
