@@ -21,7 +21,7 @@ export function generate(filename: string, schema: ZodObject<any>) {
   }  
 }
 
-const defaultCasesPath = 'dist/cases.js'
+const defaultCasesPath = 'build/src/cases.js'
 
 const flags = process.argv.slice(2);
 const specifiedCasesPath = flags[0];
@@ -51,7 +51,6 @@ if(requestedCase) {
     }
   }
 }
-
 
 console.log('Generated structs: \n')
 generatedStructs.forEach(struct => {
