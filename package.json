@@ -3,7 +3,7 @@
   "version": "0.0.21",
   "description": "zok library for zod to snarkyjs struct transformation",
   "bin": {
-    "zok": "build/index.js"
+    "z0k": "build/index.js"
   },
   "main": "index.js",
   "scripts": {

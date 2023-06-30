@@ -31,8 +31,7 @@ const casesPath = specifiedCasesPath || defaultCasesPath;
 const casesPathWithBaseDirectory = path.join(process.cwd(), casesPath);
 
 if (!fs.existsSync(casesPathWithBaseDirectory)) {
-  console.log(casesPathWithBaseDirectory);
-  throw new Error(`Cases path ${casesPathWithBaseDirectory} does not exist`);
+  throw new Error('Cases path does not exist');
 }
 
 import(casesPathWithBaseDirectory)
