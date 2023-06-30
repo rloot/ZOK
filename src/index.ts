@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
 import { zodToJsonSchema } from "zod-to-json-schema";
-import * as cases from "./cases"
+
 import { ZodObject } from "zod";
 import { createEntity } from "./codegen";
 
@@ -14,32 +16,46 @@ export function generate(filename: string, schema: ZodObject<any>) {
     throw Error('undefined definitions')
   } else {
     for (const entity of Object.keys(definitions)) {
-      // console.log('create entity', entity)
       createEntity(entity, definitions);
     }
   }  
 }
 
+const defaultCasesPath = 'dist/cases.js'
+
 const flags = process.argv.slice(2);
-const name = flags[0];
+const specifiedCasesPath = flags[0];
 const requestedCase = flags[1];
 
-if (flags.length > 1) {
-  if(!name) {
-    throw new Error('No name provided');
-  }
-  
-  if(!requestedCase) {
-    throw new Error('No case');
-  }
-  generate(name, cases[requestedCase])
-  
+const casesPath = specifiedCasesPath || defaultCasesPath;
+const casesPathWithBaseDirectory = path.join(process.cwd(), casesPath);
+
+if (!fs.existsSync(casesPathWithBaseDirectory)) {
+  throw new Error(`'Cases path ${casesPathWithBaseDirectory} does not exist`);
+}
+
+const cases = require(casesPathWithBaseDirectory);
+
+let generatedStructs: string[] = [];
+
+if(requestedCase) {
+  const schema = cases[requestedCase];
+  generate(requestedCase, schema)
+  generatedStructs.push(requestedCase);
 } else {
   for (const key in cases) {
     if (Object.hasOwnProperty.call(cases, key)) {
       const schema = cases[key];
       generate(key, schema)
+      generatedStructs.push(key);
     }
   }
 }
+
+
+console.log('Generated structs: \n')
+generatedStructs.forEach(struct => {
+  console.log(`${struct}`);
+});
+console.log(`\nAt path ${casesPathWithBaseDirectory}\n`);
 

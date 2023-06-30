@@ -1,6 +1,6 @@
 {
-  "name": "zok",
-  "version": "0.0.1",
+  "name": "z0k",
+  "version": "0.0.2",
   "description": "zok library for zod to snarkyjs struct transformation",
   "bin": {
     "zok": "dist/index.js"
@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p .",
-    "start": "rm -rf src/structs.ts && npm run build &&  node dist/index.js"
+    "start": "rm -rf src/structs.ts && npm run build && node dist/index.js"
   },
   "author": "",
   "license": "ISC",

@@ -79,6 +79,6 @@ const field = new FieldStruct(
 
 | zod type     | zod restraint     | snarky type |
 |--------------|-----------|------------|
-| z.number()      | .min() .max() .lt() .lt() .lte() .gte() .positive()| Field       |
+| z.number()      | .min() .max() .gt() .lt() .lte() .gte() .positive()| Field       |
 | z.date()      | .min() .max()  | Field       |
 | z.bool() |      | Bool        |
