@@ -319,14 +319,18 @@ function _getCheckStatement(propertyName: string, property: any) {
   switch (type) {
     case "string":
       statements.push(..._getStringAsserts(propertyName, property));
+      break;
     case "integer":
       if (format === 'unix-time') {
         statements.push(..._getDateAsserts(propertyName, property));
       }
+      break;
     case "number":
       statements.push(..._getNumberAsserts(propertyName, property));
+      break;
     case "boolean":
       statements.push(..._getBooleanAsserts(propertyName, property));
+      break;
   }
   return statements
 }
@@ -447,8 +451,8 @@ export function createEntity(name: string, definitions: any) {
   const source = printer.printFile(sf)
 
   // if generated dir does not exist, create it
-  if (!fs.existsSync('./src/generated')) fs.mkdirSync('./src/generated')
+  if (!fs.existsSync('./src/structs')) fs.mkdirSync('./src/structs')
   // write created struct to file
-  fs.writeFileSync(`./src/generated/${name}.ts`, source)
+  fs.writeFileSync(`./src/structs/${name}.ts`, source)
 }
 
