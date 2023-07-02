@@ -3,19 +3,17 @@ import fs from 'fs';
 import path from 'path';
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { createEntity } from "./codegen.js";
-export function generate(filename, schema) {
-    // use the right name
-    const json = zodToJsonSchema(schema, { name: filename, dateStrategy: 'integer' });
-    const { definitions } = json;
-    if (definitions === undefined) {
-        throw Error('undefined definitions');
+const main = () => {
+    const flags = process.argv.slice(2);
+    switch (flags[0]) {
+        case 'init':
+            initializeZok();
+            break;
+        default:
+            processSchemas(flags);
+            break;
     }
-    else {
-        for (const entity of Object.keys(definitions)) {
-            createEntity(entity, definitions);
-        }
-    }
-}
+};
 const initializeZok = () => {
     // create schemas file with example
     // build root folder
@@ -63,21 +61,18 @@ const processSchemas = (flags) => {
         console.log(`\nAt path ${casesPathWithBaseDirectory}\n`);
     });
 };
-const main = () => {
-    const flags = process.argv.slice(2);
-    switch (flags[0]) {
-        case 'init':
-            initializeZok();
-            break;
-        default:
-            processSchemas(flags);
-            break;
-    }
-    if (flags[0] == 'init') {
-        initializeZok();
+export function generate(filename, schema) {
+    // use the right name
+    const json = zodToJsonSchema(schema, { name: filename, dateStrategy: 'integer' });
+    const { definitions } = json;
+    if (definitions === undefined) {
+        throw Error('undefined definitions');
     }
     else {
+        for (const entity of Object.keys(definitions)) {
+            createEntity(entity, definitions);
+        }
     }
-};
+}
 main();
 //# sourceMappingURL=index.js.map
