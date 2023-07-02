@@ -21,6 +21,14 @@ export function generate(filename: string, schema: ZodObject<any>) {
   }  
 }
 
+const init = () => {
+  // create schemas file with example
+
+  // build root folder
+
+  //  run zok
+}
+
 const processSchemas = (specifiedCasesPath, requestedCase) => {
   const defaultCasesPath = 'build/src/schemas.js'
   let casesPath: string;
@@ -57,7 +65,6 @@ const processSchemas = (specifiedCasesPath, requestedCase) => {
           }
         }
       }
-      
       
       console.log('Generated structs: \n')
       generatedStructs.forEach(struct => {
