@@ -21,7 +21,7 @@ export function generate(filename: string, schema: ZodObject<any>) {
   }  
 }
 
-const init = () => {
+const initializeZok = () => {
   // create schemas file with example
 
   // build root folder
@@ -29,7 +29,10 @@ const init = () => {
   //  run zok
 }
 
-const processSchemas = (specifiedCasesPath, requestedCase) => {
+const processSchemas = (flags: string[]) => {
+  const specifiedCasesPath = flags[0];
+  const requestedCase = flags[1];
+  
   const defaultCasesPath = 'build/src/schemas.js'
   let casesPath: string;
 
@@ -78,13 +81,18 @@ const main = () => {
   
   const flags = process.argv.slice(2);
 
+  switch(flags[0]) {
+    case 'init':
+      initializeZok();
+      break;
+    default:
+      processSchemas(flags);
+      break
+  }
   if (flags[0] == 'init') {
-    console.log('hi >');
+    initializeZok();
   } else {
-    const specifiedCasesPath = flags[0];
-    const requestedCase = flags[1];
-    
-    processSchemas(specifiedCasesPath, requestedCase);
+
   }
 }
 

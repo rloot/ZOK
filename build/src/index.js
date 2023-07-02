@@ -16,12 +16,14 @@ export function generate(filename, schema) {
         }
     }
 }
-const init = () => {
+const initializeZok = () => {
     // create schemas file with example
     // build root folder
     //  run zok
 };
-const processSchemas = (specifiedCasesPath, requestedCase) => {
+const processSchemas = (flags) => {
+    const specifiedCasesPath = flags[0];
+    const requestedCase = flags[1];
     const defaultCasesPath = 'build/src/schemas.js';
     let casesPath;
     if (specifiedCasesPath) {
@@ -63,13 +65,18 @@ const processSchemas = (specifiedCasesPath, requestedCase) => {
 };
 const main = () => {
     const flags = process.argv.slice(2);
+    switch (flags[0]) {
+        case 'init':
+            initializeZok();
+            break;
+        default:
+            processSchemas(flags);
+            break;
+    }
     if (flags[0] == 'init') {
-        console.log('hi >');
+        initializeZok();
     }
     else {
-        const specifiedCasesPath = flags[0];
-        const requestedCase = flags[1];
-        processSchemas(specifiedCasesPath, requestedCase);
     }
 };
 main();
