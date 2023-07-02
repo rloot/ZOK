@@ -29,8 +29,8 @@ const initializeZok = () => {
 }
 
 const processSchemas = (flags: string[]) => {
-  const specifiedCasesPath = flags[0];
-  const requestedCase = flags[1];
+  const specifiedCasesPath = flags[1];
+  const requestedCase = flags[0];
   
   const defaultCasesPath = 'build/src/schemas.js'
   let casesPath: string;
