@@ -7,17 +7,20 @@ ZOK is a snakyJs utility that allows developers to express and validate the stru
 yarn add zok
 ```
 
-## How to use
-1. Describe the schemas with zod under the root folder in schemas.ts
-2. Execute CLI 
+## Usage
+1. Describe the schemas with zod under the src folder in `schemas.ts`
+2. Executing the ZOD 
 
-Generate a file for every zod schema schemas.
-```ts
+
+```bash
+# Generate a file for every zod schema in schemas.ts
 yarn zok 
-```
-Specify a single schema.
-```ts
-yarn zok file_name zod_schema_case
+
+# Specifying a single schema in schemas.ts
+yarn zok zod_schema_case
+
+# Change base schemas path
+yarn zok zod_schema_case file_name
 ```
 
 3. Import the generated Structs into you ZkDapp
@@ -29,7 +32,9 @@ import zod_schema_case from "structs/file_name.ts"
 ## Example
 
 ```ts
-// cases.ts
+// src/schemas.ts
+import { z } from 'zod';
+
 export const FieldStruct = z.object({
     f: z.number().lt(10),
     g: z.number().gt(0),
@@ -39,7 +44,7 @@ export const FieldStruct = z.object({
 ```
 
 ```ts
-// ./structs/FieldStruct.ts 
+// generated struct > src/structs/FieldStruct.ts 
 import { Field } from 'snarkyjs';
 export class FieldStruct extends Struct({
     f: Field,
@@ -62,7 +67,7 @@ export class FieldStruct extends Struct({
 ```
 
 ```ts
-// index.ts
+// src/main.ts
 import FieldStruct from './structs/FieldStruct'; 
 
 const field = new FieldStruct(
@@ -74,6 +79,9 @@ const field = new FieldStruct(
 ```
 ### You can find a list off cases at our [mina test zdapp](https://github.com/rloot/ZOK-testDapp/blob/main/src/Cases.ts)
 ---
+## Default entry file
+`src/schemas.ts`
+
 
 ## Supported types
 
