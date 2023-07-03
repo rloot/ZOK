@@ -3,8 +3,12 @@
 ZOK is a snakyJs utility that allows developers to express and validate the structure of their data in [zod](https://zod.dev/) schemas.
 
 ## Install
-```
-yarn add zok
+```bash
+# yarn
+yarn add z0k
+
+# npm
+npm install z0k
 ```
 
 ## Usage
@@ -14,13 +18,13 @@ yarn add zok
 
 ```bash
 # Generate a file for every zod schema in schemas.ts
-yarn zok 
+yarn z0k 
 
 # Specifying a single schema in schemas.ts
-yarn zok zod_schema_case
+yarn z0k zod_schema_case
 
 # Change base schemas path
-yarn zok zod_schema_case file_name
+yarn z0k zod_schema_case file_name
 ```
 
 3. Import the generated Structs into you ZkDapp
