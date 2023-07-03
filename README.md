@@ -8,7 +8,7 @@ yarn add zok
 ```
 
 ## Usage
-1. Describe the schemas with zod under the root folder in `schemas.ts`
+1. Describe the schemas with zod under the src folder in `schemas.ts`
 2. Executing the ZOD 
 
 
@@ -33,6 +33,8 @@ import zod_schema_case from "structs/file_name.ts"
 
 ```ts
 // src/schemas.ts
+import { z } from 'zod';
+
 export const FieldStruct = z.object({
     f: z.number().lt(10),
     g: z.number().gt(0),
@@ -42,7 +44,7 @@ export const FieldStruct = z.object({
 ```
 
 ```ts
-// src/structs/FieldStruct.ts 
+// generated struct > src/structs/FieldStruct.ts 
 import { Field } from 'snarkyjs';
 export class FieldStruct extends Struct({
     f: Field,
