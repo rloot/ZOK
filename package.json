@@ -21,9 +21,7 @@
   },
   "type": "module",
   "devDependencies": {
-    "@rollup/plugin-typescript": "^11.1.2",
     "@types/node": "^20.1.1",
-    "rollup": "^3.26.0",
     "ts-creator": "^1.2.5"
   }
 }
