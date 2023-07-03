@@ -13,18 +13,20 @@ npm install z0k
 
 ## Usage
 1. Describe the schemas with zod under the src folder in `schemas.ts`
-2. Executing the ZOD 
+2. Build your zkDapp `yarn build`
+3. Executing the ZOD 
 
 
 ```bash
 # Generate a file for every zod schema in schemas.ts
 yarn z0k 
 
-# Specifying a single schema in schemas.ts
-yarn z0k zod_schema_case
-
 # Change base schemas path
-yarn z0k zod_schema_case file_name
+yarn z0k file_name 
+
+# Specifying a single schema in schemas.ts
+yarn z0k file_name zod_schema_case
+
 ```
 
 3. Import the generated Structs into you ZkDapp
