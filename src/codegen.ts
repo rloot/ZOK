@@ -4,7 +4,10 @@ import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
 import { JsonSchema7DateType } from "zod-to-json-schema/src/parsers/date";
 import ts, { ObjectLiteralElementLike } from "typescript";
 import { getStorageLayout, pack } from "./codegen/properties";
-import { Slot, SlotValue } from "./types";
+import { Slot, SlotValue, StorageLayout } from "./types";
+import { off } from "process";
+
+const factory = ts.factory
 
 const NO_MODIFIERS: ts.Modifier[] = [];
 const NO_ASTERISK: ts.AsteriskToken = undefined;
@@ -256,6 +259,7 @@ function createClass(name: string, entity: any) {
   })
 
   const layout = getStorageLayout(properties)
+
   // console.log(layout)
   // for (const slot of layout) {
   //   console.log(slot)
@@ -268,14 +272,14 @@ function createClass(name: string, entity: any) {
 
   const fieldInitializators = layout.map(slot => createInitField(slot))
 
+  const consts = createConstants(layout)
+
   const members = [
+    ...consts,
     constructorFn,
     checkFn,
-    create_get(),
-    create_set(),
     ...accessors.flat(),
     ...fieldInitializators
-    // assertFn,
   ];
 
   return ts.factory.createClassDeclaration(
@@ -298,6 +302,47 @@ function createClass(name: string, entity: any) {
   );
 }
 
+function _createNewField(init: number | string) {
+  const args = []
+  if (typeof(init) === 'number') {
+    args.push(
+      factory.createBinaryExpression(
+        factory.createNumericLiteral('2'),
+        factory.createToken(ts.SyntaxKind.AsteriskAsteriskToken),
+        factory.createNumericLiteral(init)
+      )
+    )
+  } else if (typeof(init) === 'string') {
+    // bleep
+  } else {
+    // expressions?
+  }
+  return ts.factory.createNewExpression(ts.factory.createIdentifier('Field'), undefined, args)
+}
+
+function createConstants(layout: StorageLayout) {
+  const consts = []
+  for (const slot of layout) {
+    for (const v of slot) {
+      // console.log(v.name, v.offset, v.size)
+      const offset_constant = ts.factory.createVariableDeclaration(
+        `${v.name.toUpperCase()}_OFFSET`,
+        undefined,
+        undefined,
+        _createNewField(v.offset)
+        )
+        const size_constant = ts.factory.createVariableDeclaration(
+          `${v.name.toUpperCase()}_SIZE`,
+          undefined,
+          undefined,
+          _createNewField(v.size)
+      )
+      consts.push(offset_constant, size_constant)
+    }
+  }
+  return consts
+}
+
 function createInitField(slot: SlotValue[]) {
   const statements = [
     `let r = new Field(${slot[0].name});`,
@@ -306,7 +351,7 @@ function createInitField(slot: SlotValue[]) {
   for (let i = 1; i < slot.length; i++) {
     console.log(slot[i])
     statements.push(
-      `r.add(${slot[i].name}.mul(BITS_${slot[i].offset}_MASK));`,
+      `r.add(${slot[i].name}.mul(this.${slot[i].name.toUpperCase()}_OFFSET));`,
     )
   }
   statements.push('return r')
@@ -510,154 +555,11 @@ function createAssertFunction() {
 
 }
 
-function create_get() {
-  // const offset = 10 ** position
-  // const r = value.mod(offset * 10)
-  // const v = r.div(offset)
-
-  const v = ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          ts.factory.createIdentifier("v"),
-          undefined,
-          undefined,
-          ts.factory.createNewExpression(
-            ts.factory.createIdentifier("CircuitNumber"),
-            undefined,
-            [
-              ts.factory.createIdentifier("value"),
-              ts.factory.createNewExpression(
-                ts.factory.createIdentifier("Field"),
-                undefined,
-                [ts.factory.createNumericLiteral("1")]
-              ),
-            ]
-          )
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
-  );
-
-  const offset = ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          ts.factory.createIdentifier("offset"),
-          undefined,
-          undefined,
-          ts.factory.createCallExpression(
-            ts.factory.createPropertyAccessExpression(
-              ts.factory.createIdentifier("CircuitNumber"),
-              ts.factory.createIdentifier("from")
-            ),
-            undefined,
-            [
-              ts.factory.createBinaryExpression(
-                ts.factory.createNumericLiteral("10"),
-                ts.factory.createToken(ts.SyntaxKind.AsteriskAsteriskToken),
-                ts.factory.createIdentifier("position")
-              ),
-            ]
-          )
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
-  );
-
-  const remainder = ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          ts.factory.createIdentifier("r"),
-          undefined,
-          undefined,
-          ts.factory.createCallExpression(
-            ts.factory.createPropertyAccessExpression(
-              ts.factory.createIdentifier("v"),
-              ts.factory.createIdentifier("mod")
-            ),
-            undefined,
-            [
-              ts.factory.createCallExpression(
-                ts.factory.createPropertyAccessExpression(
-                  ts.factory.createIdentifier("offset"),
-                  ts.factory.createIdentifier("sub")
-                ),
-                undefined,
-                [
-                  ts.factory.createCallExpression(
-                    ts.factory.createPropertyAccessExpression(
-                      ts.factory.createIdentifier("CircuitNumber"),
-                      ts.factory.createIdentifier("from")
-                    ),
-                    undefined,
-                    [ts.factory.createNumericLiteral("1")]
-                  ),
-                ]
-              ),
-            ]
-          )
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
-  );
-
-  const ret = ts.factory.createReturnStatement(
-    ts.factory.createCallExpression(
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createCallExpression(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createIdentifier("r"),
-            ts.factory.createIdentifier("div")
-          ),
-          undefined,
-          [ts.factory.createIdentifier("offset")]
-        ),
-        ts.factory.createIdentifier("toField")
-      ),
-      undefined,
-      []
-    )
-  );
-
-  const fn = ts.factory.createMethodDeclaration(
-    [ts.factory.createModifier(ts.SyntaxKind.PrivateKeyword)],
-    undefined,
-    ts.factory.createIdentifier("_get"),
-    undefined,
-    undefined,
-    [
-      ts.factory.createParameterDeclaration(
-        undefined,
-        undefined,
-        ts.factory.createIdentifier("value"),
-        undefined,
-        ts.factory.createTypeReferenceNode(
-          ts.factory.createIdentifier("Field"),
-          undefined
-        ),
-        undefined
-      ),
-      ts.factory.createParameterDeclaration(
-        undefined,
-        undefined,
-        ts.factory.createIdentifier("position"),
-        undefined,
-        ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
-        undefined
-      ),
-    ],
-    undefined,
-    ts.factory.createBlock([v, offset, remainder, ret], true)
-  );
-  return fn;
+function stringToStaments(statements: string[]) {
+  // hack: parse the function body string into AST nodes
+  const sourceFile = ts.createSourceFile('', statements.join('\n'), ts.ScriptTarget.Latest, true);
+  const sts = sourceFile.statements;
+  return sts  
 }
 
 function createPropertyGetter(
@@ -666,22 +568,25 @@ function createPropertyGetter(
   position: number
 ) {
   // return this._extract(this.field1, position)
-  const returnStatement = ts.factory.createReturnStatement(
-    ts.factory.createCallExpression(
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createThis(),
-        ts.factory.createIdentifier("_get")
-      ),
+  const returnStatement = factory.createReturnStatement(
+    factory.createCallExpression(
+      factory.createIdentifier('_get'),
       undefined,
       [
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createThis(),
-          ts.factory.createIdentifier("_field" + fieldId)
+        factory.createPropertyAccessExpression(
+          factory.createThis(),
+          factory.createIdentifier("_field" + fieldId)
         ),
-        ts.factory.createNumericLiteral(position),
-      ]
-    )
-  );
+        factory.createPropertyAccessExpression(
+          factory.createThis(),
+          factory.createIdentifier(`${propertyName.toUpperCase()}_OFFSET`)
+        ),
+        factory.createPropertyAccessExpression(
+          factory.createThis(),
+          factory.createIdentifier(`${propertyName.toUpperCase()}_SIZE`)
+        )
+      ])
+  )
   const block = ts.factory.createBlock([returnStatement], true);
   const getter = ts.factory.createGetAccessorDeclaration(
     undefined,
@@ -691,118 +596,8 @@ function createPropertyGetter(
     // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
     block
   );
+
   return getter;
-}
-
-function create_set() {
-  const offsetStatement = ts.factory.createVariableStatement(
-    undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          ts.factory.createIdentifier("offset"),
-          undefined,
-          undefined,
-          ts.factory.createBinaryExpression(
-            ts.factory.createBinaryExpression(
-              ts.factory.createNumericLiteral("2"),
-              ts.factory.createToken(ts.SyntaxKind.AsteriskAsteriskToken),
-              ts.factory.createIdentifier("position")
-            ),
-            ts.factory.createToken(ts.SyntaxKind.MinusToken),
-            ts.factory.createNumericLiteral("1")
-          )
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
-  );
-  const body = ts.factory.createBlock(
-    [
-      offsetStatement,
-      ts.factory.createReturnStatement(
-        ts.factory.createCallExpression(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createCallExpression(
-              ts.factory.createPropertyAccessExpression(
-                ts.factory.createCallExpression(
-                  ts.factory.createPropertyAccessExpression(
-                    ts.factory.createIdentifier("field"),
-                    ts.factory.createIdentifier("sub")
-                  ),
-                  undefined,
-                  [
-                    ts.factory.createCallExpression(
-                      ts.factory.createPropertyAccessExpression(
-                        ts.factory.createThis(),
-                        ts.factory.createIdentifier("_get")
-                      ),
-                      undefined,
-                      [
-                        ts.factory.createIdentifier("field"),
-                        ts.factory.createIdentifier("position"),
-                      ]
-                    ),
-                  ]
-                ),
-                ts.factory.createIdentifier("sub")
-              ),
-              undefined,
-              [ts.factory.createIdentifier("offset")]
-            ),
-            ts.factory.createIdentifier("add")
-          ),
-          undefined,
-          [ts.factory.createIdentifier("value")]
-        )
-      ),
-    ],
-    true
-  );
-
-  const fn = ts.factory.createMethodDeclaration(
-    [ts.factory.createModifier(ts.SyntaxKind.PrivateKeyword)],
-    undefined,
-    ts.factory.createIdentifier("_set"),
-    undefined,
-    undefined,
-    [
-      ts.factory.createParameterDeclaration(
-        undefined,
-        undefined,
-        ts.factory.createIdentifier("field"),
-        undefined,
-        ts.factory.createTypeReferenceNode(
-          ts.factory.createIdentifier("Field"),
-          undefined
-        )
-      ),
-      ts.factory.createParameterDeclaration(
-        undefined,
-        undefined,
-        ts.factory.createIdentifier("position"),
-        undefined,
-        ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword)
-      ),
-      ts.factory.createParameterDeclaration(
-        undefined,
-        undefined,
-        ts.factory.createIdentifier("value"),
-        undefined,
-        ts.factory.createUnionTypeNode([
-          ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
-          ts.factory.createTypeReferenceNode(
-            ts.factory.createIdentifier("Field"),
-            undefined
-          ),
-        ])
-      ),
-    ],
-    undefined,
-    body
-  );
-
-  return fn;
 }
 
 function createPropertySetter(
@@ -816,19 +611,17 @@ function createPropertySetter(
         ts.factory.createThis(),
         ts.factory.createIdentifier("_field" + fieldId)
       ),
-      ts.factory.createToken(ts.SyntaxKind.FirstAssignment),      ts.factory.createCallExpression(
+      ts.factory.createToken(ts.SyntaxKind.FirstAssignment),
+      ts.factory.createCallExpression(
         ts.factory.createPropertyAccessExpression(
           ts.factory.createThis(),
           ts.factory.createIdentifier("_set")
         ),
         undefined,
         [
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createThis(),
-            ts.factory.createIdentifier("_field" + fieldId)
-          ),
-          ts.factory.createNumericLiteral(position),
-          ts.factory.createIdentifier("value"),
+          factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier("_field" + fieldId)),
+          factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(`${propertyName.toUpperCase()}_OFFSET`)),
+          factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(`${propertyName.toUpperCase()}_SIZE`)),
         ]
       )
     )
@@ -851,6 +644,9 @@ function createPropertySetter(
     params,
     body
   );
+
+
+  
   return setter;
 }
 
@@ -919,38 +715,18 @@ function createImportStaments() {
       ),
       ts.factory.createStringLiteral("snarkyjs-math/build/src/snarkyjs-math")
     ),
-    // todo : this file needs to be available in the project.
     ts.factory.createImportDeclaration(
       undefined,
       ts.factory.createImportClause(
         false,
         undefined,
         ts.factory.createNamedImports([
-          ts.factory.createImportSpecifier(
-            false,
-            undefined,
-            ts.factory.createIdentifier("BITS_64_MASK")
-          ),
-          ts.factory.createImportSpecifier(
-            false,
-            undefined,
-            ts.factory.createIdentifier("BITS_128_MASK")
-          ),
-          ts.factory.createImportSpecifier(
-            false,
-            undefined,
-            ts.factory.createIdentifier("BITS_192_MASK")
-          ),
+          ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("get")),
+          ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("set")),
         ])
       ),
-      ts.factory.createStringLiteral("../consts")
+      ts.factory.createStringLiteral("../storage")
     )
-    
-    // ts.factory.createImportDeclaration(
-    //   undefined,
-    //   undefined,
-    //   ts.factory.createStringLiteral('../consts')
-    // ),
   ];
 }
 
