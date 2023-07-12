@@ -1,4 +1,9 @@
 {
+  "ts-node": {
+    "transpileOnly": true,
+    "require": ["ts-node/register"],
+    "esm": true
+  },
   "compilerOptions": {
     "target": "es2020",
     "module": "ES2020",
@@ -9,7 +14,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowJs": true,

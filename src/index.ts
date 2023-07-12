@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
 import fs from 'fs';
 import path from 'path';
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -32,20 +32,21 @@ const processSchemas = (flags: string[]) => {
   const specifiedCasesPath = flags[0];
   const requestedCase = flags[1];
   
-  const defaultCasesPath = 'build/src/schemas.js'
+  const defaultCasesPath = 'src/schemas.ts'
   let casesPath: string;
 
   if (specifiedCasesPath) {
     const filename = path.basename(specifiedCasesPath); // 'mytcfile.ts' 
-    const buildDirectory = 'build/src/';
-    const buildFilePath = path.join(buildDirectory, filename.replace(/\.ts$/, '.js'));
+    const buildDirectory = 'src/';
+    const buildFilePath = path.join(buildDirectory, filename);
   
     casesPath = buildFilePath;
   } else {
     casesPath = defaultCasesPath
   }
   const casesPathWithBaseDirectory = path.join(process.cwd(), casesPath);
-  
+  console.log(casesPathWithBaseDirectory, casesPath);
+
   if (!fs.existsSync(casesPathWithBaseDirectory)) {
     throw new Error('Cases path does not exist');
   }
