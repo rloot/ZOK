@@ -317,8 +317,8 @@ function _getCheckStatement(propertyName: string, property: any) {
   const statements: ts.Statement[] = [];
 
   switch (type) {
-    case "string":
-      statements.push(..._getStringAsserts(propertyName, property));
+      case "string":
+       statements.push(..._getStringAsserts(propertyName, property));
       break;
     case "integer":
       if (format === 'unix-time') {
