@@ -7,6 +7,7 @@ export class Square extends Struct({
         this.check();
     }
     public check() {
+        // Check
         this.num.assertGreaterThanOrEqual(0, "num must be greater or equal than 0")
     }
     _assert(expr: unknown, msg?: string) { if (!expr)

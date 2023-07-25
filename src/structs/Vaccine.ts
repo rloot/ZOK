@@ -8,6 +8,7 @@ export class Vaccine extends Struct({
         this.check();
     }
     public check() {
+        // Check
         // exclusive minimum
         this.issuer.assertGreaterThan(0, "issuer must be greater than 0")
         // exclusive minimum
