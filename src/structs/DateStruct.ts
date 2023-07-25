@@ -9,6 +9,7 @@ export class DateStruct extends Struct({
         this.check();
     }
     public check() {
+        // Check
         this.minDate.assertGreaterThanOrEqual(86400000, "minDate must be greater or equal than 86400000")
         this.maxDate.assertLessThanOrEqual(63158400000, "maxDate must be less or equal than 63158400000")
     }

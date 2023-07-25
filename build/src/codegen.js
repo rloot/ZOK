@@ -162,7 +162,10 @@ function _getCheckStatement(propertyName, property) {
 function createCheckFunction(entity) {
     const { properties } = entity;
     const parameters = [];
-    const statements = Object.entries(properties).map(([name, property]) => _getCheckStatement(name, property)).flat();
+    const statements = [
+        createSingleLineComment("Check"),
+        ...Object.entries(properties).map(([name, property]) => _getCheckStatement(name, property)).flat()
+    ];
     const checkFn = ts.factory.createMethodDeclaration([ts.factory.createModifier(ts.SyntaxKind.PublicKeyword)], NO_ASTERISK, "check", NO_QUESTION_TOKEN, NO_TYPED_PARAMS, parameters, NO_TYPED_NODE, ts.factory.createBlock(statements, true));
     return checkFn;
 }

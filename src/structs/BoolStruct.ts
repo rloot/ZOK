@@ -7,6 +7,7 @@ export class BoolStruct extends Struct({
         this.check();
     }
     public check() {
+        // Check
     }
     _assert(expr: unknown, msg?: string) { if (!expr)
         throw new Error(msg); }

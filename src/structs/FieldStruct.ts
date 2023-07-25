@@ -10,6 +10,7 @@ export class FieldStruct extends Struct({
         this.check();
     }
     public check() {
+        // Check
         this.f.assertLessThan(10, "f must be less than 10")
         // exclusive minimum
         this.g.assertGreaterThan(0, "g must be greater than 0")

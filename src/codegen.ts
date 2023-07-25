@@ -12,7 +12,7 @@ const NO_TYPED_PARAMS = undefined
 const NO_TYPED_NODE = undefined
 
 function _getTypeFromPropKey(key: string) {
-  return  key == 'boolean' ? 'Bool':'Field'
+  return key == 'boolean' ? 'Bool' : 'Field'
 }
 
 function _getAssertCallStatement(
@@ -97,7 +97,7 @@ function _ltAssert(
     undefined,
     [
       ts.factory.createNumericLiteral(max),
-      message    
+      message
     ]
   );
   return (callExpr as unknown) as ts.Statement;
@@ -111,7 +111,7 @@ function _lteAssert(
   const message = ts.factory.createStringLiteral(
     `${propertyName} must be less or equal than ${max}`
   );
-  
+
   const callExpr = ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
       ts.factory.createIdentifier(`this.${propertyName}`),
@@ -176,7 +176,7 @@ function _getDateAsserts(
   property: JsonSchema7DateType
 ): ts.Statement[] {
   const statements: ts.Statement[] = [];
-  
+
   if (property.minimum !== undefined) {
     statements.push(_gteAssert(propertyName, property.minimum));
   }
@@ -214,7 +214,7 @@ function createClass(name: string, entity: any) {
   const props = getProperties(properties)
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
-  const constructorFn = createConstructorFunction(entity);    
+  const constructorFn = createConstructorFunction(entity);
 
   const members = [
     constructorFn,
@@ -236,7 +236,7 @@ function createClass(name: string, entity: any) {
             undefined,
             [
               ts.factory.createObjectLiteralExpression(
-                props, 
+                props,
                 true
               )
             ]
@@ -254,13 +254,13 @@ function createClass(name: string, entity: any) {
 
 function createConstructorFunction(entity) {
   const { properties } = entity;
-  
+
   const props = Object.keys(properties).map(name => name)
-  
+
   // constructor params
   const parameters = props.map((key) => {
     const type = properties[key]?.type;
-  
+
     return ts.factory.createParameterDeclaration(
       undefined,
       undefined,
@@ -272,34 +272,34 @@ function createConstructorFunction(entity) {
       ),
     )
   })
- 
+
   const superCall = ts.factory.createExpressionStatement(
     ts.factory.createCallExpression(
       ts.factory.createSuper(),
       undefined,
       [
-      ts.factory.createObjectLiteralExpression(
-        props.map(key => { 
-          return ts.factory.createShorthandPropertyAssignment(
-            ts.factory.createIdentifier(key),
-            undefined // uninitalized
-           )
-        })
-      )
-    ])
+        ts.factory.createObjectLiteralExpression(
+          props.map(key => {
+            return ts.factory.createShorthandPropertyAssignment(
+              ts.factory.createIdentifier(key),
+              undefined // uninitalized
+            )
+          })
+        )
+      ])
   )
 
   const checkCall = ts.factory.createExpressionStatement(
-      ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createThis(),
-          ts.factory.createIdentifier('check')
-        ),
-        undefined,
-        []
-      )
+    ts.factory.createCallExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createThis(),
+        ts.factory.createIdentifier('Executes custom checks')
+      ),
+      undefined,
+      []
+    )
   )
-  
+
   const statements = [superCall, checkCall]
 
   const fn = ts.factory.createConstructorDeclaration(
@@ -317,8 +317,8 @@ function _getCheckStatement(propertyName: string, property: any) {
   const statements: ts.Statement[] = [];
 
   switch (type) {
-      case "string":
-       statements.push(..._getStringAsserts(propertyName, property));
+    case "string":
+      statements.push(..._getStringAsserts(propertyName, property));
       break;
     case "integer":
       if (format === 'unix-time') {
@@ -340,10 +340,13 @@ function createCheckFunction(entity: any) {
 
   const parameters: ts.ParameterDeclaration[] = [];
 
-  const statements: ts.Statement[] = Object.entries(properties).map(
-    ([name, property]) => _getCheckStatement(name, property)
-  ).flat();
- 
+  const statements: ts.Statement[] = [
+    createSingleLineComment("Check"),
+    ...Object.entries(properties).map(
+      ([name, property]) => _getCheckStatement(name, property)
+    ).flat()
+  ];
+
   const checkFn = ts.factory.createMethodDeclaration(
     [ts.factory.createModifier(ts.SyntaxKind.PublicKeyword)],
     NO_ASTERISK,
@@ -428,10 +431,10 @@ function createImportStaments() {
 }
 
 export function createEntity(name: string, definitions: any) {
-  
+
   const entity = definitions[name];
   const { properties } = entity;
-     
+
   // single line import statement
   const imports: ts.ImportDeclaration[] = [createImportStaments()];
 
