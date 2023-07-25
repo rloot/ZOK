@@ -293,7 +293,7 @@ function createConstructorFunction(entity) {
     ts.factory.createCallExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createThis(),
-        ts.factory.createIdentifier('check')
+        ts.factory.createIdentifier('Executes custom checks')
       ),
       undefined,
       []
