@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-export const Vaccine = z.object({
-    // issuer id number
-    issuer: z.number().positive(),
-    // timestamp of expiration
-    expiration: z.number().positive(),
-}).describe("Vaccine schema");
-
 export const Square = z.object({
   num: z.number().gte(0)
 });
