@@ -244,7 +244,7 @@ function createClass(name: string, entity: any) {
 
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
-  const constructorFn = createConstructorFunction(entity);
+  const constructorFn = createConstructorFunction(name, entity);
 
   // console.log('creating props', properties)
   const props = getProperties(properties, true);
@@ -384,7 +384,8 @@ function createInitField(slot: SlotValue[]) {
   )
 }
 
-function createConstructorFunction(entity) {
+function createConstructorFunction(name, entity) {
+  console.log(entity)
   const { properties } = entity;
 
   // const props = Object.keys(properties).map((name) => name);
@@ -411,7 +412,7 @@ function createConstructorFunction(entity) {
     return ts.factory.createPropertyAssignment(
       ts.factory.createIdentifier(`_field${index}`),
       ts.factory.createCallExpression(
-        ts.factory.createIdentifier(`pepe._fillField${index}`),
+        ts.factory.createIdentifier(`${name}._fillField${index}`),
         NO_TYPED_NODE,
         slot.map((v) => ts.factory.createIdentifier(v.name))
       )
@@ -566,22 +567,25 @@ function createPropertyGetter(
   // return this._extract(this.field1, position)
   const returnStatement = factory.createReturnStatement(
     factory.createCallExpression(
-      factory.createIdentifier('_get'),
+      factory.createIdentifier('read'),
       NO_TYPED_NODE,
       [
         factory.createPropertyAccessExpression(
           factory.createThis(),
           factory.createIdentifier("_field" + fieldId)
         ),
-        factory.createPropertyAccessExpression(
-          factory.createThis(),
-          factory.createIdentifier(`${propertyName.toUpperCase()}_OFFSET`)
-        ),
-        factory.createPropertyAccessExpression(
-          factory.createThis(),
-          factory.createIdentifier(`${propertyName.toUpperCase()}_SIZE`)
-        )
-      ])
+        factory.createIdentifier(`Test.${propertyName.toUpperCase()}_OFFSET`),
+        factory.createIdentifier(`Test.${propertyName.toUpperCase()}_SIZE`)
+        // factory.createPropertyAccessExpression(
+        //   factory.createThis(),
+        //   factory.createIdentifier(`${propertyName.toUpperCase()}_OFFSET`)
+        // ),
+        // factory.createPropertyAccessExpression(
+        //   factory.createThis(),
+        //   factory.createIdentifier(`${propertyName.toUpperCase()}_SIZE`)
+        // )
+      ]
+    )
   )
   const block = ts.factory.createBlock([returnStatement], true);
   const getter = ts.factory.createGetAccessorDeclaration(
@@ -609,15 +613,19 @@ function createPropertySetter(
       ),
       ts.factory.createToken(ts.SyntaxKind.FirstAssignment),
       ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createThis(),
-          ts.factory.createIdentifier("_set")
-        ),
-        undefined,
+        ts.factory.createIdentifier("set"),
+        NO_TYPED_NODE,
+        // ts.factory.createPropertyAccessExpression(
+          // ts.factory.createThis(),
+        // ),
+        // undefined,
         [
           factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier("_field" + fieldId)),
-          factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(`${propertyName.toUpperCase()}_OFFSET`)),
-          factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(`${propertyName.toUpperCase()}_SIZE`)),
+          factory.createIdentifier("value"),
+          factory.createIdentifier(`Test.${propertyName.toUpperCase()}_OFFSET`),
+          factory.createIdentifier(`Test.${propertyName.toUpperCase()}_SIZE`),
+          // factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(`${propertyName.toUpperCase()}_OFFSET`)),
+          // factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(`${propertyName.toUpperCase()}_SIZE`)),
         ]
       )
     )
@@ -702,7 +710,8 @@ function createImportStaments() {
         false,
         undefined,
         ts.factory.createNamedImports([
-          ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("get")),
+          // ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("get")),
+          ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("read")),
           ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("set")),
         ])
       ),
