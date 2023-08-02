@@ -25,7 +25,7 @@ function _getAssertCallStatement(
 ): ts.Statement {
   return (ts.factory.createCallExpression(
     ts.factory.createIdentifier(`this._assert`),
-    undefined,
+    NO_TYPED_NODE,
     [expr, message]
   ) as unknown) as ts.Statement;
 }
@@ -46,7 +46,7 @@ function _gtAssert(propertyName: string, min: number): ts.Statement {
       ts.factory.createIdentifier(`this.${propertyName}`),
       ts.factory.createIdentifier("assertGreaterThan")
     ),
-    undefined,
+    NO_TYPED_NODE,
     [ts.factory.createNumericLiteral(min), message]
   );
   return (callExpr as unknown) as ts.Statement;
@@ -62,7 +62,7 @@ function _gteAssert(propertyName: string, min: number): ts.Statement {
       ts.factory.createIdentifier(`this.${propertyName}`),
       ts.factory.createIdentifier("assertGreaterThanOrEqual")
     ),
-    undefined,
+    NO_TYPED_NODE,
     [ts.factory.createNumericLiteral(min), message]
   );
   return (callExpr as unknown) as ts.Statement;
@@ -81,7 +81,7 @@ function _ltAssert(propertyName: string, max: number): ts.Statement {
       ts.factory.createIdentifier(`this.${propertyName}`),
       ts.factory.createIdentifier("assertLessThan")
     ),
-    undefined,
+    NO_TYPED_NODE,
     [ts.factory.createNumericLiteral(max), message]
   );
   return (callExpr as unknown) as ts.Statement;
@@ -97,7 +97,7 @@ function _lteAssert(propertyName: string, max: number): ts.Statement {
       ts.factory.createIdentifier(`this.${propertyName}`),
       ts.factory.createIdentifier("assertLessThanOrEqual")
     ),
-    undefined,
+    NO_TYPED_NODE,
     [ts.factory.createNumericLiteral(max), message]
   );
   return (callExpr as unknown) as ts.Statement;
@@ -306,11 +306,7 @@ function _createNewField(init: number | string) {
   const args = []
   if (typeof(init) === 'number') {
     args.push(
-      factory.createBinaryExpression(
-        factory.createNumericLiteral('2'),
-        factory.createToken(ts.SyntaxKind.AsteriskAsteriskToken),
-        factory.createNumericLiteral(init)
-      )
+      factory.createNumericLiteral(init)
     )
   } else if (typeof(init) === 'string') {
     // bleep
@@ -328,13 +324,13 @@ function createConstants(layout: StorageLayout) {
       const offset_constant = ts.factory.createVariableDeclaration(
         `${v.name.toUpperCase()}_OFFSET`,
         undefined,
-        undefined,
+        NO_TYPED_NODE,
         _createNewField(v.offset)
         )
         const size_constant = ts.factory.createVariableDeclaration(
           `${v.name.toUpperCase()}_SIZE`,
           undefined,
-          undefined,
+          NO_TYPED_NODE,
           _createNewField(v.size)
       )
       consts.push(offset_constant, size_constant)
@@ -358,13 +354,13 @@ function createInitField(slot: SlotValue[]) {
 
   const params = slot.map(
     (v: SlotValue) => ts.factory.createParameterDeclaration(
-      undefined,
+      NO_MODIFIERS,
       undefined,
       ts.factory.createIdentifier(v.name),
       undefined,
       ts.factory.createTypeReferenceNode(
         ts.factory.createIdentifier("Field"),
-        undefined
+        NO_TYPED_NODE
       )
   ))
 
@@ -416,7 +412,7 @@ function createConstructorFunction(entity) {
       ts.factory.createIdentifier(`_field${index}`),
       ts.factory.createCallExpression(
         ts.factory.createIdentifier(`pepe._fillField${index}`),
-        undefined,
+        NO_TYPED_NODE,
         slot.map((v) => ts.factory.createIdentifier(v.name))
       )
     )
@@ -425,7 +421,7 @@ function createConstructorFunction(entity) {
   const superCall = ts.factory.createExpressionStatement(
     ts.factory.createCallExpression(
       ts.factory.createSuper(),
-      undefined,
+      NO_TYPED_NODE,
       [
       ts.factory.createObjectLiteralExpression(
         superProps,
@@ -439,9 +435,9 @@ function createConstructorFunction(entity) {
     ts.factory.createCallExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createThis(),
-        ts.factory.createIdentifier('checks')
+        ts.factory.createIdentifier('check')
       ),
-      undefined,
+      NO_TYPED_NODE,
       []
     )
   )
@@ -449,7 +445,7 @@ function createConstructorFunction(entity) {
   const statements = [superCall, checkCall]
 
   const fn = ts.factory.createConstructorDeclaration(
-    undefined,
+    NO_MODIFIERS,
     parameters,
     ts.factory.createBlock(statements, true)
   );
@@ -514,14 +510,14 @@ function createAssertFunction() {
     NO_TYPED_PARAMS,
     [
       ts.factory.createParameterDeclaration(
-        undefined,
+        NO_MODIFIERS,
         undefined,
         ts.factory.createIdentifier("expr"),
-        undefined,
+        NO_QUESTION_TOKEN,
         ts.factory.createKeywordTypeNode(ts.SyntaxKind.UnknownKeyword)
       ),
       ts.factory.createParameterDeclaration(
-        undefined,
+        NO_MODIFIERS,
         undefined,
         ts.factory.createIdentifier("msg"),
         ts.factory.createToken(ts.SyntaxKind.QuestionToken),
@@ -541,7 +537,7 @@ function createAssertFunction() {
           ts.factory.createThrowStatement(
             ts.factory.createNewExpression(
               ts.factory.createIdentifier("Error"),
-              undefined,
+              NO_TYPED_NODE,
               [ts.factory.createIdentifier("msg")]
             )
           ),
@@ -571,7 +567,7 @@ function createPropertyGetter(
   const returnStatement = factory.createReturnStatement(
     factory.createCallExpression(
       factory.createIdentifier('_get'),
-      undefined,
+      NO_TYPED_NODE,
       [
         factory.createPropertyAccessExpression(
           factory.createThis(),
@@ -628,18 +624,18 @@ function createPropertySetter(
   );
   const params = [
     ts.factory.createParameterDeclaration(
-      undefined,
+      NO_MODIFIERS,
       undefined,
       ts.factory.createIdentifier("value"),
-      undefined,
-      undefined
+      NO_QUESTION_TOKEN,
+      NO_TYPED_NODE
       // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword)
     ),
   ];
 
   const body = ts.factory.createBlock([statement], true);
   const setter = ts.factory.createSetAccessorDeclaration(
-    undefined,
+    NO_MODIFIERS,
     ts.factory.createIdentifier(propertyName),
     params,
     body
@@ -706,26 +702,11 @@ function createImportStaments() {
         false,
         undefined,
         ts.factory.createNamedImports([
-          ts.factory.createImportSpecifier(
-            false,
-            undefined,
-            ts.factory.createIdentifier("CircuitNumber")
-          ),
-        ])
-      ),
-      ts.factory.createStringLiteral("snarkyjs-math/build/src/snarkyjs-math")
-    ),
-    ts.factory.createImportDeclaration(
-      undefined,
-      ts.factory.createImportClause(
-        false,
-        undefined,
-        ts.factory.createNamedImports([
           ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("get")),
           ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("set")),
         ])
       ),
-      ts.factory.createStringLiteral("../storage")
+      ts.factory.createStringLiteral("z0k/src/lib/storage")
     )
   ];
 }
