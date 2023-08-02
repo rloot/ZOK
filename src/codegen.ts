@@ -3,9 +3,9 @@ import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
 import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
 import { JsonSchema7DateType } from "zod-to-json-schema/src/parsers/date";
 import ts, { ObjectLiteralElementLike } from "typescript";
-import { getStorageLayout, pack } from "./codegen/properties";
+
+import { getStorageLayout, pack } from "./codegen/properties.js";
 import { Slot, SlotValue, StorageLayout } from "./types";
-import { off } from "process";
 
 const factory = ts.factory
 
