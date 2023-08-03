@@ -329,12 +329,13 @@ __decorate([
 ], UInt240.prototype, "value", void 0);
 
 
-// __decorate([
-//     prop,
-//     __metadata("design:type", UInt240)
-// ], Int64.prototype, "magnitude", void 0);
-// __decorate([
-//     prop,
-//     __metadata("design:type", Sign)
-// ], Int64.prototype, "sgn", void 0);
-// //# sourceMappingURL=int.js.map
+__decorate([
+    prop,
+    __metadata("design:type", UInt240)
+], UInt240.prototype, "magnitude", void 0);
+__decorate([
+    prop,
+    __metadata("design:type", Sign)
+], Int240.prototype, "sgn", void 0);
+
+//# sourceMappingURL=int.js.map
