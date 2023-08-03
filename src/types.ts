@@ -8,3 +8,7 @@ export type SlotValue = {
 export type Slot = {[key: string]: SlotValue}
 
 export type StorageLayout = SlotValue[][]
+
+export type GeneratorOptions = {
+  packed: boolean
+}
