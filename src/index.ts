@@ -74,18 +74,17 @@ export function generate(
 }
 
 const program = new Command();
-program
-  .command("generate")
+program.command("generate")
   .description("generate code")
-  .argument("name", "otuput struct name")
-  .argument("schema", "schema file")
-  .argument("entity", "selected case")
+  // .argument("name", "otuput struct name")
+  .argument("<schema>", "schema file")
+  .option("--entity <entity>", "a specific entity to generate")
   .option("--packed", "pack variables flag")
-  .action(async (name, schema, entity, options) => {
-    console.log("generate", name, schema, entity, options);
+  .action(async (schema, options) => {
+    console.log("generate", schema, options);
     await processSchemas(
       schema,
-      entity,
+      options.entity,
       {
         packed: options.packed ? true : false
       }
