@@ -1,96 +1,96 @@
-#!/usr/bin/env ts-node
 import fs from 'fs';
 import path from 'path';
 import { zodToJsonSchema } from "zod-to-json-schema";
-
 import { ZodObject } from "zod";
-import { createEntity } from "./codegen.js";
+import { Command } from 'commander';
+import { UInt240, read, set } from './lib/index.js';
+import { createEntity } from "./codegen/index.js";
 
-const main = () => {
-  
-  const flags = process.argv.slice(2);
-
-  switch(flags[0]) {
-    case 'init':
-      initializeZok();
-      break;
-    default:
-      processSchemas(flags);
-      break
-  }
-}
-
-const initializeZok = () => {
-  // create schemas file with simple example
-
-  // build root folder of consuming project
-
-  // run zok
-}
-
-const processSchemas = (flags: string[]) => {
-  const specifiedCasesPath = flags[0];
-  const requestedCase = flags[1];
-  
-  const defaultCasesPath = 'src/schemas.ts'
+const processSchemas = async (
+  // schemaFilepath?: string = './src/schemas.ts',
+  schemaFilepath?: string,
+  requestedCase?: string,
+  options?: any
+) => {
   let casesPath: string;
 
-  if (specifiedCasesPath) {
-    const filename = path.basename(specifiedCasesPath); // 'mytcfile.ts' 
-    const buildDirectory = 'src/';
+  if (schemaFilepath !== undefined) {
+    const filename = path.basename(schemaFilepath); // 'mytcfile.ts' 
+    const buildDirectory = 'build/src';
     const buildFilePath = path.join(buildDirectory, filename);
   
     casesPath = buildFilePath;
   } else {
-    casesPath = defaultCasesPath
+    casesPath = './src/schemas.js'
   }
-  const casesPathWithBaseDirectory = path.join(process.cwd(), casesPath);
+  console.log(casesPath);
+  const cwd = process.cwd();
+  const casesPathWithBaseDirectory = path.join(cwd, casesPath);
   console.log(casesPathWithBaseDirectory, casesPath);
 
   if (!fs.existsSync(casesPathWithBaseDirectory)) {
     throw new Error('Cases path does not exist');
   }
   
-  import(casesPathWithBaseDirectory)
-    .then(cases => {
-      let generatedStructs: string[] = [];
-      
-      if(requestedCase) {
-        const schema = cases[requestedCase];
-        generate(requestedCase, schema)
-        generatedStructs.push(requestedCase);
-      } else {
-        for (const key in cases) {
-          if (Object.hasOwnProperty.call(cases, key)) {
-            const schema = cases[key];
-            generate(key, schema)
-            generatedStructs.push(key);
-          }
-        }
-      }
-      
-      console.log('Generated structs: \n')
-      generatedStructs.forEach(struct => {
-        console.log(`${struct}`);
-      });
-      console.log(`\nAt path ${casesPathWithBaseDirectory}\n`);
-    });
+  const schema = (await import(casesPathWithBaseDirectory))
+  let generatedStructs: string[] = [];
+
+  const entities = requestedCase ? [requestedCase] : Object.keys(schema);
+
+  entities.map((name: string) => generate(name, schema[name], options))
+
+  // if(requestedCase) {
+  //   generate(requestedCase,schema[requestedCase])
+  //   generatedStructs.push(requestedCase);
+  // } else {
+  //   Object.entries(schema).map(
+  //     ([key, value]) => {
+  //       generate(key, value as any)
+  //       generatedStructs.push(key);
+  //     }
+  //   )
+  // }
+  console.log('Generated structs: \n')
+  entities.forEach(name => console.log(`${name}`));
+  console.log(`\nAt path ${casesPathWithBaseDirectory}\n`);
 }
 
-export function generate(filename: string, schema: ZodObject<any>) {
+export function generate(
+  filename: string,
+  schema: ZodObject<any>,
+  options: any
+) {
   // use the right name
-  const json = zodToJsonSchema(schema, { name: filename, dateStrategy: 'integer' })
-
-  const { definitions } = json
-
+  const json = zodToJsonSchema(schema, filename);
+  const { definitions } = json;
   if (definitions === undefined) {
-    throw Error('undefined definitions')
+    throw Error("undefined definitions");
   } else {
     for (const entity of Object.keys(definitions)) {
-      createEntity(entity, definitions);
+      console.log('options', options)
+      createEntity(entity, definitions, options);
     }
-  }  
+  }
 }
 
-main();
+const program = new Command();
+program.command("generate")
+  .description("generate code")
+  // .argument("name", "otuput struct name")
+  .argument("<schema>", "schema file")
+  .option("--entity <entity>", "a specific entity to generate")
+  .option("--packed", "pack variables flag")
+  .action(async (schema, options) => {
+    console.log("generate", schema, options);
+    await processSchemas(
+      schema,
+      options.entity,
+      {
+        packed: options.packed ? true : false
+      }
+    )
+  });
 
+program.parse();
+
+export { UInt240, read, set };

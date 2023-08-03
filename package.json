@@ -2,27 +2,33 @@
   "name": "z0k",
   "version": "0.1.5",
   "description": "zok library for zod to snarkyjs struct transformation",
+  "type": "module",
   "bin": {
     "z0k": "build/src/index.js"
   },
-  "main": "index.js",
+  "main": "build/src/index.js",
+  "types": "build/src/typings/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "build": "tsc -p .",
     "start": "rm -rf src/structs.ts && npm run build && ts-node --esm --require ts-node/register build/src/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "snarkyjs": "^0.10.1",
+    "mocha": "^10.2.0",
+    "snarkyjs": "0.11.4",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
     "zod": "^3.21.4",
-    "zod-to-json-schema": "3.21.2"
+    "zod-to-json-schema": "^3.21.4"
   },
-  "type": "module",
   "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
     "@types/node": "^20.1.1",
+    "chai": "^4.3.7",
+    "commander": "^11.0.0",
     "ts-creator": "^1.2.5"
   }
 }

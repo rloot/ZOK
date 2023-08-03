@@ -6,23 +6,27 @@
   },
   "compilerOptions": {
     "target": "es2020",
-    "module": "ES2020",
+    "module": "es2022",
     "lib": ["dom", "esnext"],
-    "outDir": "./build/src",
-    "strict": false,
+    "outDir": "./build",
+    "strict": true,
     "strictPropertyInitialization": false, // to enable generic constructors, e.g. on CircuitValue
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "node",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowJs": true,
     "declaration": true,
     "sourceMap": true,
     "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+  "include": [
+    "./src/**/*",
+    "./test/**/*",
+    "./src/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "**/*.spec.ts", "src/generated/**/*"]
 }
