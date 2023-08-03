@@ -1,4 +1,4 @@
-import { SlotValue, StorageLayout } from "../types";
+import { SlotValue, StorageLayout } from "../types.js";
 
 export function pack(numbers: [string, number][]): [string, number][][] {
     const result: [string, number][][] = [];
@@ -29,7 +29,7 @@ export function getPackedProps(properties: any): {[key: string]: SlotValue} {
     Object.keys(properties).map((name) => [name, 64])
   )
 
-  const fields = {}
+  const fields: any = {}
   let currentSlot = 0
   for (const slot of packedProps) {
     // console.log(slot)

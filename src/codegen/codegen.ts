@@ -4,179 +4,26 @@ import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
 import { JsonSchema7DateType } from "zod-to-json-schema/src/parsers/date";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
-import { getStorageLayout, pack } from "./codegen/properties.js";
-import { Slot, SlotValue, StorageLayout } from "./types";
+import { getStorageLayout, pack } from "./properties.js";
+import { GeneratorOptions, Slot, SlotValue, StorageLayout } from "../types.js";
+import { createSingleLineComment, getPropertyMapping } from "./utils.js";
+import { _getBooleanAsserts, _getDateAsserts, _getNumberAsserts, _getStringAsserts } from "./asserts.js";
 
-const factory = ts.factory
+const factory = ts.factory;
 
 const NO_MODIFIERS: ts.Modifier[] = [];
-const NO_ASTERISK: ts.AsteriskToken = undefined;
+
+const NO_ASTERISK = undefined;
 const NO_QUESTION_TOKEN = undefined;
 const NO_TYPED_PARAMS = undefined;
 const NO_TYPED_NODE = undefined;
 
 function _getTypeFromPropKey(key: string) {
-  return key == 'boolean' ? 'Bool' : 'Field'
-}
-
-function _getAssertCallStatement(
-  expr: ts.Expression,
-  message: ts.Expression
-): ts.Statement {
-  return (ts.factory.createCallExpression(
-    ts.factory.createIdentifier(`this._assert`),
-    NO_TYPED_NODE,
-    [expr, message]
-  ) as unknown) as ts.Statement;
-}
-
-// property asserts
-
-function _gtAssert(propertyName: string, min: number): ts.Statement {
-  const binaryExpr = ts.factory.createBinaryExpression(
-    ts.factory.createIdentifier(`this.${propertyName}`),
-    ts.factory.createToken(ts.SyntaxKind.GreaterThanToken),
-    ts.factory.createNumericLiteral(min.toString())
-  );
-  const message = ts.factory.createStringLiteral(
-    `${propertyName} must be greater than ${min}`
-  );
-  const callExpr = ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier(`this.${propertyName}`),
-      ts.factory.createIdentifier("assertGreaterThan")
-    ),
-    NO_TYPED_NODE,
-    [ts.factory.createNumericLiteral(min), message]
-  );
-  return (callExpr as unknown) as ts.Statement;
-}
-
-function _gteAssert(propertyName: string, min: number): ts.Statement {
-  const message = ts.factory.createStringLiteral(
-    `${propertyName} must be greater or equal than ${min}`
-  );
-
-  const callExpr = ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier(`this.${propertyName}`),
-      ts.factory.createIdentifier("assertGreaterThanOrEqual")
-    ),
-    NO_TYPED_NODE,
-    [ts.factory.createNumericLiteral(min), message]
-  );
-  return (callExpr as unknown) as ts.Statement;
-}
-
-function _ltAssert(propertyName: string, max: number): ts.Statement {
-  // if (max < 0) {
-  //   throw new Error('numbers in MINA cannot go below zero')
-  // }
-
-  const message = ts.factory.createStringLiteral(
-    `${propertyName} must be less than ${max}`
-  );
-  const callExpr = ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier(`this.${propertyName}`),
-      ts.factory.createIdentifier("assertLessThan")
-    ),
-    NO_TYPED_NODE,
-    [ts.factory.createNumericLiteral(max), message]
-  );
-  return (callExpr as unknown) as ts.Statement;
-}
-
-function _lteAssert(propertyName: string, max: number): ts.Statement {
-  const message = ts.factory.createStringLiteral(
-    `${propertyName} must be less or equal than ${max}`
-  );
-
-  const callExpr = ts.factory.createCallExpression(
-    ts.factory.createPropertyAccessExpression(
-      ts.factory.createIdentifier(`this.${propertyName}`),
-      ts.factory.createIdentifier("assertLessThanOrEqual")
-    ),
-    NO_TYPED_NODE,
-    [ts.factory.createNumericLiteral(max), message]
-  );
-  return (callExpr as unknown) as ts.Statement;
-}
-
-function _getBooleanAsserts(
-  propertyName: string,
-  property: any
-): ts.Statement[] {
-  const statements: ts.Statement[] = [];
-
-  return statements;
-}
-
-function _getNumberAsserts(
-  propertyName: string,
-  property: JsonSchema7NumberType
-): ts.Statement[] {
-  const statements: ts.Statement[] = [];
-
-  if (property.minimum !== undefined) {
-    statements.push(_gteAssert(propertyName, property.minimum));
-  }
-  if (property.exclusiveMinimum !== undefined) {
-    statements.push(createSingleLineComment("exclusive minimum"));
-    statements.push(_gtAssert(propertyName, property.exclusiveMinimum));
-  }
-  if (property.maximum !== undefined) {
-    statements.push(_lteAssert(propertyName, property.maximum));
-  }
-  if (property.exclusiveMaximum !== undefined) {
-    statements.push(_ltAssert(propertyName, property.exclusiveMaximum));
-  }
-  if (property.multipleOf !== undefined) {
-  }
-  return statements;
-}
-
-function _getStringAsserts(
-  propertyName: string,
-  property: JsonSchema7StringType
-): ts.Statement[] {
-  const statements: ts.Statement[] = [];
-  return statements;
-}
-
-function _getDateAsserts(
-  propertyName: string,
-  property: JsonSchema7DateType
-): ts.Statement[] {
-  const statements: ts.Statement[] = [];
-
-  if (property.minimum !== undefined) {
-    statements.push(_gteAssert(propertyName, property.minimum));
-  }
-
-  if (property.maximum !== undefined) {
-    statements.push(_lteAssert(propertyName, property.maximum));
-  }
-
-  return statements;
-}
-
-// utils
-
-function getPropertyMapping(properties: any[]) {
-  const propertyMapping = {}
-  let bitsize = 0  
-  for (const key in properties) {
-    const property = properties[key];
-    propertyMapping[key] = Math.floor(bitsize / 256)
-    // fixme: this assumes every property is uint64
-    bitsize += 64
-  }
-  return propertyMapping
+  return key == "boolean" ? "Bool" : "Field";
 }
 
 function getProperties(
-  properties: {[key: string]: {type: string}},
+  properties: { [key: string]: { type: string } },
   compact: boolean = true
 ) {
   if (!compact) {
@@ -191,74 +38,74 @@ function getProperties(
     const packedProps = pack(
       // fixme: replace 64 with correct data type bit size
       Object.keys(properties).map((name) => [name, 64])
-    )
+    );
 
-    const fields: Slot = {}
-    let currentSlot = 0
+    const fields: Slot = {};
+    let currentSlot = 0;
     for (const slot of packedProps) {
       // console.log(slot)
-      let offset = 0
+      let offset = 0;
       for (const [name, bits] of slot) {
         fields[name] = {
           name,
           slot: currentSlot,
           size: bits,
-          offset
-        }
-        offset += bits
+          offset,
+        };
+        offset += bits;
       }
-      currentSlot += 1
+      currentSlot += 1;
     }
 
-    const props = []
-    let index = 0
+    const props = [];
+    let index = 0;
     for (const slot of packedProps) {
       // add comments for each field
-      props.push(createSingleLineComment(`Field ${index} has ${slot.length} variables`))
+      props.push(
+        createSingleLineComment(`Field ${index} has ${slot.length} variables`)
+      );
       for (const [name, bits] of slot) {
-        console.log(name)
-        props.push(createSingleLineComment(`${name}: ${bits} bits`))
+        console.log(name);
+        props.push(createSingleLineComment(`${name}: ${bits} bits`));
       }
       props.push(
-        (
-          ts.factory.createPropertyAssignment(
-            `_field${index}`,
-            ts.factory.createIdentifier("Field")
-          ) as unknown
-        ) as ObjectLiteralElementLike
-      )
-      index += 1
+        (ts.factory.createPropertyAssignment(
+          `_field${index}`,
+          ts.factory.createIdentifier("Field")
+        ) as unknown) as ObjectLiteralElementLike
+      );
+      index += 1;
     }
-    return props
+    return props;
   }
-}
-
-function createSingleLineComment(text: string) {
-  return (ts.factory.createIdentifier(`// ${text}`) as unknown) as ts.Statement;
 }
 
 // declarations
 
-function createClass(name: string, entity: any) {
+// todo : we can group up these args into a single object
+function createClass(name: string, entity: any, options: GeneratorOptions) {
   const { properties } = entity;
 
   const assertFn = createAssertFunction();
   const checkFn = createCheckFunction(entity);
-  const constructorFn = createConstructorFunction(name, entity);
+  const constructorFn = createConstructorFunction(name, entity, options);
 
   // console.log('creating props', properties)
   const props = getProperties(properties, true);
 
-  const propertyMapping = getPropertyMapping(properties)
+  const propertyMapping = getPropertyMapping(properties);
 
-  const accessors = Object.entries(propertyMapping).map(([key, fieldId]: [string, number], index: number) => {
-    return [
-      createPropertyGetter(key, fieldId, index),
-      createPropertySetter(key, fieldId, index)
-    ]
-  })
+  const accessors = Object.entries(propertyMapping).map(
+    // @ts-ignore
+    ([key, fieldId]: [string, number], index: number): any => {
+      return [
+        createPropertyGetter(name, key, fieldId, index),
+        createPropertySetter(name, key, fieldId, index),
+      ];
+    }
+  );
 
-  const layout = getStorageLayout(properties)
+  const layout = getStorageLayout(properties);
 
   // console.log(layout)
   // for (const slot of layout) {
@@ -270,16 +117,16 @@ function createClass(name: string, entity: any) {
   //   }
   // }
 
-  const fieldInitializators = layout.map(slot => createInitField(slot))
+  const fieldInitializators = layout.map((slot) => createInitField(slot));
 
-  const consts = createConstants(layout)
+  const consts = createConstants(layout);
 
   const members = [
     ...consts,
     constructorFn,
     checkFn,
     ...accessors.flat(),
-    ...fieldInitializators
+    ...fieldInitializators,
   ];
 
   return ts.factory.createClassDeclaration(
@@ -292,7 +139,7 @@ function createClass(name: string, entity: any) {
           ts.factory.createCallExpression(
             ts.factory.createIdentifier("Struct"),
             undefined,
-            [ts.factory.createObjectLiteralExpression(props, true)]
+            [ts.factory.createObjectLiteralExpression(props as any, true)]
           ),
           undefined
         ),
@@ -303,21 +150,23 @@ function createClass(name: string, entity: any) {
 }
 
 function _createNewField(init: number | string) {
-  const args = []
-  if (typeof(init) === 'number') {
-    args.push(
-      factory.createNumericLiteral(init)
-    )
-  } else if (typeof(init) === 'string') {
+  const args = [];
+  if (typeof init === "number") {
+    args.push(factory.createNumericLiteral(init));
+  } else if (typeof init === "string") {
     // bleep
   } else {
     // expressions?
   }
-  return ts.factory.createNewExpression(ts.factory.createIdentifier('Field'), undefined, args)
+  return ts.factory.createNewExpression(
+    ts.factory.createIdentifier("Field"),
+    undefined,
+    args
+  );
 }
 
 function createConstants(layout: StorageLayout) {
-  const consts = []
+  const consts = [];
   for (const slot of layout) {
     for (const v of slot) {
       // console.log(v.name, v.offset, v.size)
@@ -326,34 +175,32 @@ function createConstants(layout: StorageLayout) {
         undefined,
         NO_TYPED_NODE,
         _createNewField(v.offset)
-        )
-        const size_constant = ts.factory.createVariableDeclaration(
-          `${v.name.toUpperCase()}_SIZE`,
-          undefined,
-          NO_TYPED_NODE,
-          _createNewField(v.size)
-      )
-      consts.push(offset_constant, size_constant)
+      );
+      const size_constant = ts.factory.createVariableDeclaration(
+        `${v.name.toUpperCase()}_SIZE`,
+        undefined,
+        NO_TYPED_NODE,
+        _createNewField(v.size)
+      );
+      consts.push(offset_constant, size_constant);
     }
   }
-  return consts
+  return consts;
 }
 
 function createInitField(slot: SlotValue[]) {
-  const statements = [
-    `let r = new Field(${slot[0].name});`,
-  ]
+  const statements = [`let r = new Field(${slot[0].name});`];
 
   for (let i = 1; i < slot.length; i++) {
-    console.log(slot[i])
+    console.log(slot[i]);
     statements.push(
-      `r.add(${slot[i].name}.mul(this.${slot[i].name.toUpperCase()}_OFFSET));`,
-    )
+      `r.add(${slot[i].name}.mul(this.${slot[i].name.toUpperCase()}_OFFSET));`
+    );
   }
-  statements.push('return r')
+  statements.push("return r");
 
-  const params = slot.map(
-    (v: SlotValue) => ts.factory.createParameterDeclaration(
+  const params = slot.map((v: SlotValue) =>
+    ts.factory.createParameterDeclaration(
       NO_MODIFIERS,
       undefined,
       ts.factory.createIdentifier(v.name),
@@ -362,14 +209,19 @@ function createInitField(slot: SlotValue[]) {
         ts.factory.createIdentifier("Field"),
         NO_TYPED_NODE
       )
-  ))
-
+    )
+  );
 
   // hack: parse the function body string into AST nodes
-  const sourceFile = ts.createSourceFile('', statements.join('\n'), ts.ScriptTarget.Latest, true);
+  const sourceFile = ts.createSourceFile(
+    "",
+    statements.join("\n"),
+    ts.ScriptTarget.Latest,
+    true
+  );
   const sts = sourceFile.statements;
 
-  console.log(slot)
+  console.log(slot);
 
   // console.log(sts)
   return ts.factory.createMethodDeclaration(
@@ -381,12 +233,14 @@ function createInitField(slot: SlotValue[]) {
     params,
     NO_TYPED_NODE,
     ts.factory.createBlock(sts, true)
-  )
+  );
 }
 
-function createConstructorFunction(name, entity) {
-  console.log(entity)
+function createConstructorFunction(name: string, entity: any, options?: GeneratorOptions) {
+  console.log(entity);
   const { properties } = entity;
+
+  let packed = options !== undefined ? options.packed : false;
 
   // const props = Object.keys(properties).map((name) => name);
 
@@ -400,50 +254,55 @@ function createConstructorFunction(name, entity) {
       ts.factory.createIdentifier(key),
       undefined,
       ts.factory.createTypeReferenceNode(
-        // todo : this should be the correct type, for now we always return Field 
-        ts.factory.createIdentifier(_getTypeFromPropKey(type)), undefined
-      ),
-    )
-  })
-
-  const layout = getStorageLayout(properties)
-
-  const superProps = layout.map((slot, index) => {
-    return ts.factory.createPropertyAssignment(
-      ts.factory.createIdentifier(`_field${index}`),
-      ts.factory.createCallExpression(
-        ts.factory.createIdentifier(`${name}._fillField${index}`),
-        NO_TYPED_NODE,
-        slot.map((v) => ts.factory.createIdentifier(v.name))
+        // todo : this should be the correct type, for now we always return Field
+        ts.factory.createIdentifier(_getTypeFromPropKey(type)),
+        undefined
       )
-    )
-  })
-  
+    );
+  });
+
+
+  let superProps
+  if (packed) {
+    const layout = getStorageLayout(properties);
+    superProps = layout.map((slot, index) => {
+      return ts.factory.createPropertyAssignment(
+        ts.factory.createIdentifier(`_field${index}`),
+        ts.factory.createCallExpression(
+          ts.factory.createIdentifier(`${name}._fillField${index}`),
+          NO_TYPED_NODE,
+          slot.map((v) => ts.factory.createIdentifier(v.name))
+        )
+      );
+    });
+  } else {
+    superProps = Object.keys(properties).map((key, index) => {
+      return ts.factory.createPropertyAssignment(
+        ts.factory.createIdentifier(`_field${index}`),
+        ts.factory.createIdentifier(key)
+      );
+    });
+  }
+
+
   const superCall = ts.factory.createExpressionStatement(
-    ts.factory.createCallExpression(
-      ts.factory.createSuper(),
-      NO_TYPED_NODE,
-      [
-      ts.factory.createObjectLiteralExpression(
-        superProps,
-        true
-      )
+    ts.factory.createCallExpression(ts.factory.createSuper(), NO_TYPED_NODE, [
+      ts.factory.createObjectLiteralExpression(superProps, true),
     ])
-  )
-
+  );
 
   const checkCall = ts.factory.createExpressionStatement(
     ts.factory.createCallExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createThis(),
-        ts.factory.createIdentifier('check')
+        ts.factory.createIdentifier("check")
       ),
       NO_TYPED_NODE,
       []
     )
-  )
+  );
 
-  const statements = [superCall, checkCall]
+  const statements = [superCall, checkCall];
 
   const fn = ts.factory.createConstructorDeclaration(
     NO_MODIFIERS,
@@ -483,9 +342,9 @@ function createCheckFunction(entity: any) {
 
   const statements: ts.Statement[] = [
     createSingleLineComment("Check"),
-    ...Object.entries(properties).map(
-      ([name, property]) => _getCheckStatement(name, property)
-    ).flat()
+    ...Object.entries(properties)
+      .map(([name, property]) => _getCheckStatement(name, property))
+      .flat(),
   ];
 
   const checkFn = ts.factory.createMethodDeclaration(
@@ -549,33 +408,40 @@ function createAssertFunction() {
       false
     )
   );
-
 }
 
 function stringToStaments(statements: string[]) {
   // hack: parse the function body string into AST nodes
-  const sourceFile = ts.createSourceFile('', statements.join('\n'), ts.ScriptTarget.Latest, true);
+  const sourceFile = ts.createSourceFile(
+    "",
+    statements.join("\n"),
+    ts.ScriptTarget.Latest,
+    true
+  );
   const sts = sourceFile.statements;
-  return sts  
+  return sts;
 }
 
 function createPropertyGetter(
+  entityName: string,
   propertyName: string,
   fieldId: number,
   position: number
 ) {
   // return this._extract(this.field1, position)
-  const returnStatement = factory.createReturnStatement(
+  const returnPackedStatement = factory.createReturnStatement(
     factory.createCallExpression(
-      factory.createIdentifier('read'),
+      factory.createIdentifier("read"),
       NO_TYPED_NODE,
       [
         factory.createPropertyAccessExpression(
           factory.createThis(),
           factory.createIdentifier("_field" + fieldId)
         ),
-        factory.createIdentifier(`Test.${propertyName.toUpperCase()}_OFFSET`),
-        factory.createIdentifier(`Test.${propertyName.toUpperCase()}_SIZE`)
+        // Entity.PROPERTYNAME_OFFSET
+        factory.createIdentifier(`${entityName}.${propertyName.toUpperCase()}_OFFSET`),
+        factory.createIdentifier(`${entityName}.${propertyName.toUpperCase()}_SIZE`),
+        // this.PROPERTYNAME_OFFSET 
         // factory.createPropertyAccessExpression(
         //   factory.createThis(),
         //   factory.createIdentifier(`${propertyName.toUpperCase()}_OFFSET`)
@@ -586,8 +452,15 @@ function createPropertyGetter(
         // )
       ]
     )
-  )
+  );
+  const returnStatement = factory.createReturnStatement(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createThis(),
+      ts.factory.createIdentifier("_field" + fieldId)
+    ),
+  );
   const block = ts.factory.createBlock([returnStatement], true);
+  // const block = ts.factory.createBlock([returnPackedStatement], true);
   const getter = ts.factory.createGetAccessorDeclaration(
     undefined,
     ts.factory.createIdentifier(propertyName),
@@ -601,11 +474,12 @@ function createPropertyGetter(
 }
 
 function createPropertySetter(
+  entityName: string,
   propertyName: string,
   fieldId: number,
   position: number
 ) {
-  const statement = ts.factory.createExpressionStatement(
+  const packedStatement = ts.factory.createExpressionStatement(
     ts.factory.createBinaryExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createThis(),
@@ -616,20 +490,34 @@ function createPropertySetter(
         ts.factory.createIdentifier("set"),
         NO_TYPED_NODE,
         // ts.factory.createPropertyAccessExpression(
-          // ts.factory.createThis(),
+        // ts.factory.createThis(),
         // ),
         // undefined,
         [
-          factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier("_field" + fieldId)),
+          factory.createPropertyAccessExpression(
+            factory.createThis(),
+            factory.createIdentifier("_field" + fieldId)
+          ),
           factory.createIdentifier("value"),
-          factory.createIdentifier(`Test.${propertyName.toUpperCase()}_OFFSET`),
-          factory.createIdentifier(`Test.${propertyName.toUpperCase()}_SIZE`),
+          factory.createIdentifier(`${entityName}.${propertyName.toUpperCase()}_OFFSET`),
+          factory.createIdentifier(`${entityName}.${propertyName.toUpperCase()}_SIZE`),
           // factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(`${propertyName.toUpperCase()}_OFFSET`)),
           // factory.createPropertyAccessExpression(factory.createThis(), factory.createIdentifier(`${propertyName.toUpperCase()}_SIZE`)),
         ]
       )
     )
   );
+  const statement = ts.factory.createExpressionStatement(
+    ts.factory.createBinaryExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createThis(),
+        ts.factory.createIdentifier("_field" + fieldId)
+      ),
+      ts.factory.createToken(ts.SyntaxKind.FirstAssignment),
+      factory.createIdentifier('value')
+    )
+  );
+
   const params = [
     ts.factory.createParameterDeclaration(
       NO_MODIFIERS,
@@ -649,8 +537,6 @@ function createPropertySetter(
     body
   );
 
-
-  
   return setter;
 }
 
@@ -711,16 +597,24 @@ function createImportStaments() {
         undefined,
         ts.factory.createNamedImports([
           // ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("get")),
-          ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("read")),
-          ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier("set")),
+          ts.factory.createImportSpecifier(
+            false,
+            undefined,
+            ts.factory.createIdentifier("read")
+          ),
+          ts.factory.createImportSpecifier(
+            false,
+            undefined,
+            ts.factory.createIdentifier("set")
+          ),
         ])
       ),
       ts.factory.createStringLiteral("z0k/src/lib/storage")
-    )
+    ),
   ];
 }
 
-export function createEntity(name: string, definitions: any) {
+export function createEntity(name: string, definitions: any, options: GeneratorOptions) {
   const entity = definitions[name];
   const { properties } = entity;
 
@@ -728,7 +622,7 @@ export function createEntity(name: string, definitions: any) {
   const imports: ts.ImportDeclaration[] = createImportStaments();
 
   // create class definitoin
-  const clazz = createClass(name, entity);
+  const clazz = createClass(name, entity, options);
 
   const printer = ts.createPrinter({
     newLine: ts.NewLineKind.LineFeed,
