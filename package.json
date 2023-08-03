@@ -1,6 +1,6 @@
 {
   "name": "z0k",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "zok library for zod to snarkyjs struct transformation",
   "type": "module",
   "bin": {
