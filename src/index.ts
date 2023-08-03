@@ -9,7 +9,8 @@ import { createEntity } from "./codegen/index.js";
 const processSchemas = async (
   // schemaFilepath?: string = './src/schemas.ts',
   schemaFilepath?: string,
-  requestedCase?: string
+  requestedCase?: string,
+  options?: any
 ) => {
   let casesPath: string;
 
@@ -33,28 +34,31 @@ const processSchemas = async (
   
   const schema = (await import(casesPathWithBaseDirectory))
   let generatedStructs: string[] = [];
-  if(requestedCase) {
-    generate(requestedCase,schema[requestedCase])
-    generatedStructs.push(requestedCase);
-  } else {
-    Object.entries(schema).map(
-      ([key, value]) => {
-        generate(key, value as any)
-        generatedStructs.push(key);
-      }
-    )
-  }
+
+  const entities = requestedCase ? [requestedCase] : Object.keys(schema);
+
+  entities.map((name: string) => generate(name, schema[name], options))
+
+  // if(requestedCase) {
+  //   generate(requestedCase,schema[requestedCase])
+  //   generatedStructs.push(requestedCase);
+  // } else {
+  //   Object.entries(schema).map(
+  //     ([key, value]) => {
+  //       generate(key, value as any)
+  //       generatedStructs.push(key);
+  //     }
+  //   )
+  // }
   console.log('Generated structs: \n')
-  generatedStructs.forEach(struct => {
-    console.log(`${struct}`);
-  });
+  entities.forEach(name => console.log(`${name}`));
   console.log(`\nAt path ${casesPathWithBaseDirectory}\n`);
 }
 
 export function generate(
   filename: string,
   schema: ZodObject<any>,
-  packed: boolean = true
+  options: any
 ) {
   // use the right name
   const json = zodToJsonSchema(schema, filename);
@@ -63,9 +67,7 @@ export function generate(
     throw Error("undefined definitions");
   } else {
     for (const entity of Object.keys(definitions)) {
-      const options = {
-        packed
-      }
+      console.log('options', options)
       createEntity(entity, definitions, options);
     }
   }
@@ -80,8 +82,14 @@ program
   .argument("entity", "selected case")
   .option("--packed", "pack variables flag")
   .action(async (name, schema, entity, options) => {
-    console.log("generate", name, schema, options);
-    await processSchemas(schema, entity)
+    console.log("generate", name, schema, entity, options);
+    await processSchemas(
+      schema,
+      entity,
+      {
+        packed: options.packed ? true : false
+      }
+    )
   });
 
 program.parse();

@@ -1,7 +1,4 @@
 import * as fs from "fs";
-import { JsonSchema7NumberType } from "zod-to-json-schema/src/parsers/number";
-import { JsonSchema7StringType } from "zod-to-json-schema/src/parsers/string";
-import { JsonSchema7DateType } from "zod-to-json-schema/src/parsers/date";
 import ts, { ObjectLiteralElementLike } from "typescript";
 
 import { getStorageLayout, pack } from "./properties.js";
@@ -91,7 +88,7 @@ function createClass(name: string, entity: any, options: GeneratorOptions) {
   const constructorFn = createConstructorFunction(name, entity, options);
 
   // console.log('creating props', properties)
-  const props = getProperties(properties, true);
+  const props = getProperties(properties, options.packed);
 
   const propertyMapping = getPropertyMapping(properties);
 
@@ -99,8 +96,8 @@ function createClass(name: string, entity: any, options: GeneratorOptions) {
     // @ts-ignore
     ([key, fieldId]: [string, number], index: number): any => {
       return [
-        createPropertyGetter(name, key, fieldId, index),
-        createPropertySetter(name, key, fieldId, index),
+        createPropertyGetter(name, key, fieldId, index, options),
+        createPropertySetter(name, key, fieldId, index, options),
       ];
     }
   );
@@ -117,9 +114,9 @@ function createClass(name: string, entity: any, options: GeneratorOptions) {
   //   }
   // }
 
-  const fieldInitializators = layout.map((slot) => createInitField(slot));
-
-  const consts = createConstants(layout);
+  const fieldInitializators = options.packed ? layout.map((slot) => createInitField(slot)) : []
+    
+  const consts = options.packed ? createConstants(layout, options) : []
 
   const members = [
     ...consts,
@@ -141,7 +138,7 @@ function createClass(name: string, entity: any, options: GeneratorOptions) {
             undefined,
             [ts.factory.createObjectLiteralExpression(props as any, true)]
           ),
-          undefined
+          NO_TYPED_NODE
         ),
       ]),
     ],
@@ -165,23 +162,39 @@ function _createNewField(init: number | string) {
   );
 }
 
-function createConstants(layout: StorageLayout) {
+function createConstants(layout: StorageLayout, options: GeneratorOptions) {
   const consts = [];
   for (const slot of layout) {
     for (const v of slot) {
       // console.log(v.name, v.offset, v.size)
-      const offset_constant = ts.factory.createVariableDeclaration(
+
+      const offset_constant = factory.createPropertyDeclaration(
+        [factory.createModifier(ts.SyntaxKind.StaticKeyword)],
         `${v.name.toUpperCase()}_OFFSET`,
-        undefined,
+        NO_QUESTION_TOKEN,
         NO_TYPED_NODE,
         _createNewField(v.offset)
-      );
-      const size_constant = ts.factory.createVariableDeclaration(
+      )
+      const size_constant = factory.createPropertyDeclaration(
+        [factory.createModifier(ts.SyntaxKind.StaticKeyword)],
         `${v.name.toUpperCase()}_SIZE`,
-        undefined,
+        NO_QUESTION_TOKEN,
         NO_TYPED_NODE,
         _createNewField(v.size)
-      );
+      )
+
+      // const offset_constant = factory.createVariableDeclaration(
+      //   `${v.name.toUpperCase()}_OFFSET`,
+      //   undefined,
+      //   NO_TYPED_NODE,
+      //   _createNewField(v.offset)
+      // );
+      // const size_constant = factory.createVariableDeclaration(
+      //   `${v.name.toUpperCase()}_SIZE`,
+      //   undefined,
+      //   NO_TYPED_NODE,
+      //   _createNewField(v.size)
+      // );
       consts.push(offset_constant, size_constant);
     }
   }
@@ -278,7 +291,7 @@ function createConstructorFunction(name: string, entity: any, options?: Generato
   } else {
     superProps = Object.keys(properties).map((key, index) => {
       return ts.factory.createPropertyAssignment(
-        ts.factory.createIdentifier(`_field${index}`),
+        ts.factory.createIdentifier(key),
         ts.factory.createIdentifier(key)
       );
     });
@@ -426,7 +439,8 @@ function createPropertyGetter(
   entityName: string,
   propertyName: string,
   fieldId: number,
-  position: number
+  position: number,
+  options: GeneratorOptions
 ) {
   // return this._extract(this.field1, position)
   const returnPackedStatement = factory.createReturnStatement(
@@ -456,11 +470,25 @@ function createPropertyGetter(
   const returnStatement = factory.createReturnStatement(
     ts.factory.createPropertyAccessExpression(
       ts.factory.createThis(),
-      ts.factory.createIdentifier("_field" + fieldId)
+      ts.factory.createIdentifier(`${propertyName}`)
+      // ts.factory.createIdentifier("_field" + fieldId)
     ),
   );
-  const block = ts.factory.createBlock([returnStatement], true);
+  const block = ts.factory.createBlock(
+    [
+      options.packed ? returnPackedStatement : returnStatement
+    ],
+    true
+  );
   // const block = ts.factory.createBlock([returnPackedStatement], true);
+  // const getter = ts.factory.createMethodDeclaration(
+  //   NO_MODIFIERS,NO_ASTERISK,
+  //   ts.factory.createIdentifier(`get${propertyName}`),
+  //   NO_QUESTION_TOKEN, NO_TYPED_PARAMS,[],
+  //   NO_TYPED_NODE,
+  //   // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+  //   block
+  // );
   const getter = ts.factory.createGetAccessorDeclaration(
     undefined,
     ts.factory.createIdentifier(propertyName),
@@ -477,7 +505,8 @@ function createPropertySetter(
   entityName: string,
   propertyName: string,
   fieldId: number,
-  position: number
+  position: number,
+  options: GeneratorOptions
 ) {
   const packedStatement = ts.factory.createExpressionStatement(
     ts.factory.createBinaryExpression(
@@ -511,7 +540,8 @@ function createPropertySetter(
     ts.factory.createBinaryExpression(
       ts.factory.createPropertyAccessExpression(
         ts.factory.createThis(),
-        ts.factory.createIdentifier("_field" + fieldId)
+        // ts.factory.createIdentifier("_field" + fieldId)
+        ts.factory.createIdentifier(propertyName)
       ),
       ts.factory.createToken(ts.SyntaxKind.FirstAssignment),
       factory.createIdentifier('value')
@@ -529,7 +559,19 @@ function createPropertySetter(
     ),
   ];
 
-  const body = ts.factory.createBlock([statement], true);
+  const body = ts.factory.createBlock(
+    [
+      options.packed ? packedStatement : statement
+    ],
+    true
+  );
+  // const setter = ts.factory.createMethodDeclaration(
+  //   NO_MODIFIERS,NO_ASTERISK,
+  //   ts.factory.createIdentifier(`set${propertyName}`),
+  //   NO_QUESTION_TOKEN, NO_TYPED_PARAMS, params,
+  //   NO_TYPED_NODE,
+  //   body
+  // );
   const setter = ts.factory.createSetAccessorDeclaration(
     NO_MODIFIERS,
     ts.factory.createIdentifier(propertyName),
@@ -618,11 +660,13 @@ export function createEntity(name: string, definitions: any, options: GeneratorO
   const entity = definitions[name];
   const { properties } = entity;
 
+  console.log(options)
+
   // single line import statement
   const imports: ts.ImportDeclaration[] = createImportStaments();
 
   // create class definitoin
-  const clazz = createClass(name, entity, options);
+  const clazz = createClass(`${name}Struct`, entity, options);
 
   const printer = ts.createPrinter({
     newLine: ts.NewLineKind.LineFeed,
@@ -639,5 +683,5 @@ export function createEntity(name: string, definitions: any, options: GeneratorO
   // if generated dir does not exist, create it
   if (!fs.existsSync("./src/generated")) fs.mkdirSync("./src/generated");
   // write created struct to file
-  fs.writeFileSync(`./src/generated/${name}.ts`, source);
+  fs.writeFileSync(`./src/generated/${name}Struct.ts`, source);
 }
