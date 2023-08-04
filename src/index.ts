@@ -33,23 +33,11 @@ const processSchemas = async (
   }
   
   const schema = (await import(casesPathWithBaseDirectory))
-  let generatedStructs: string[] = [];
 
   const entities = requestedCase ? [requestedCase] : Object.keys(schema);
 
   entities.map((name: string) => generate(name, schema[name], options))
 
-  // if(requestedCase) {
-  //   generate(requestedCase,schema[requestedCase])
-  //   generatedStructs.push(requestedCase);
-  // } else {
-  //   Object.entries(schema).map(
-  //     ([key, value]) => {
-  //       generate(key, value as any)
-  //       generatedStructs.push(key);
-  //     }
-  //   )
-  // }
   console.log('Generated structs: \n')
   entities.forEach(name => console.log(`${name}`));
   console.log(`\nAt path ${casesPathWithBaseDirectory}\n`);
@@ -79,14 +67,16 @@ program.command("generate")
   // .argument("name", "otuput struct name")
   .argument("<schema>", "schema file")
   .option("--entity <entity>", "a specific entity to generate")
-  .option("--packed", "pack variables flag")
+  .option("--packed", "pack variables flag", false)
+  .option("--accessors", "accessors flag", false)
   .action(async (schema, options) => {
     console.log("generate", schema, options);
     await processSchemas(
       schema,
       options.entity,
       {
-        packed: options.packed ? true : false
+        packed: options.packed,
+        accessors: options.accessors
       }
     )
   });

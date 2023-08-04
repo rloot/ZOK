@@ -480,25 +480,26 @@ function createPropertyGetter(
     ],
     true
   );
-  // const block = ts.factory.createBlock([returnPackedStatement], true);
-  // const getter = ts.factory.createMethodDeclaration(
-  //   NO_MODIFIERS,NO_ASTERISK,
-  //   ts.factory.createIdentifier(`get${propertyName}`),
-  //   NO_QUESTION_TOKEN, NO_TYPED_PARAMS,[],
-  //   NO_TYPED_NODE,
-  //   // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
-  //   block
-  // );
-  const getter = ts.factory.createGetAccessorDeclaration(
-    undefined,
-    ts.factory.createIdentifier(propertyName),
-    [],
-    undefined,
-    // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
-    block
-  );
-
-  return getter;
+  
+  if (options.accessors) {
+    return ts.factory.createGetAccessorDeclaration(
+      undefined,
+      ts.factory.createIdentifier(propertyName),
+      [],
+      undefined,
+      // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+      block
+    );
+  } else {
+    return ts.factory.createMethodDeclaration(
+      NO_MODIFIERS,NO_ASTERISK,
+      ts.factory.createIdentifier(`get${propertyName}`),
+      NO_QUESTION_TOKEN, NO_TYPED_PARAMS,[],
+      NO_TYPED_NODE,
+      // ts.factory.createKeywordTypeNode(ts.SyntaxKind.NumberKeyword),
+      block
+    );
+  }
 }
 
 function createPropertySetter(
@@ -565,21 +566,23 @@ function createPropertySetter(
     ],
     true
   );
-  // const setter = ts.factory.createMethodDeclaration(
-  //   NO_MODIFIERS,NO_ASTERISK,
-  //   ts.factory.createIdentifier(`set${propertyName}`),
-  //   NO_QUESTION_TOKEN, NO_TYPED_PARAMS, params,
-  //   NO_TYPED_NODE,
-  //   body
-  // );
-  const setter = ts.factory.createSetAccessorDeclaration(
-    NO_MODIFIERS,
-    ts.factory.createIdentifier(propertyName),
-    params,
-    body
-  );
-
-  return setter;
+  
+  if (options.accessors) {
+    return ts.factory.createSetAccessorDeclaration(
+      NO_MODIFIERS,
+      ts.factory.createIdentifier(propertyName),
+      params,
+      body
+    );
+  } else {
+    return ts.factory.createMethodDeclaration(
+      NO_MODIFIERS,NO_ASTERISK,
+      ts.factory.createIdentifier(`set${propertyName}`),
+      NO_QUESTION_TOKEN, NO_TYPED_PARAMS, params,
+      NO_TYPED_NODE,
+      body
+    );
+  }
 }
 
 function createImportStaments() {
