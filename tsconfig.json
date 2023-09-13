@@ -6,15 +6,15 @@
   },
   "compilerOptions": {
     "target": "es2020",
-    "module": "es2022",
+    "module": "es2020",
     "lib": ["dom", "esnext"],
     "outDir": "./build",
-    "strict": true,
+    "strict": false,
     "strictPropertyInitialization": false, // to enable generic constructors, e.g. on CircuitValue
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "allowJs": true,
